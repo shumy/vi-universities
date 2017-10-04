@@ -1,0 +1,55 @@
+plugins {
+  id 'java'
+  id 'org.xtext.xtend' version '1.0.19'
+}
+
+group 'pt.ua.ieeta'
+version '0.1.0'
+
+sourceCompatibility = 1.8
+
+defaultTasks 'jar'
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+sourceSets {
+  main.java.srcDirs= ['src/main']
+  test.java.srcDirs= ['src/test']
+}
+
+dependencies {
+  compile 'ch.qos.logback:logback-classic:1.1.8'
+  compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.12.0'
+  
+  compile 'info.picocli:picocli:1.0.1'
+  
+  compile 'org.neo4j:neo4j-kernel:3.1.7'
+  compile('org.neo4j:neo4j-cypher:3.1.7') {
+    exclude group: 'org.neo4j', module: 'neo4j-cypher-compiler-2.3'
+    exclude group: 'org.scala-lang', module: 'scala-reflect'
+  }
+  
+  //compile 'org.neo4j:neo4j-graph-algo:3.1.7'
+  //compile 'org.neo4j:neo4j-udc:3.1.7'
+  //compile 'org.neo4j:neo4j-graph-matching:3.1.7'
+  //compile 'org.neo4j:neo4j-jmx:3.1.7'
+  //compile 'org.neo4j:neo4j-consistency-check:3.1.7'
+}
+
+jar {
+  manifest {
+    attributes 'Implementation-Title': project.name,
+      'Implementation-Version': version, 
+      'Built-By': 'micaelpedrosa@gmail.com',
+      'Main-Class': 'ieeta.viu.Command',
+      'Class-Path': configurations.compile.collect { 'deps/' + it.getName() }.join(' ')
+  }
+}
+
+task export(type: Copy) {
+  into "$buildDir/libs/deps"
+  from configurations.runtime
+}
