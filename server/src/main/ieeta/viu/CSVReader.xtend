@@ -13,75 +13,65 @@ import java.util.concurrent.atomic.AtomicInteger
 class CSVReader {
   static val logger = LoggerFactory.getLogger(CSVReader)
   
-  static val nameMapper = #[
-    "NumeroCandidatoCurso",
-    "BI",
-    "Nome",
-    "NotaCandidaturaCurso",
-    "OpcaoCurso",
-    "PI",
-    "12",
-    "10/11",
-    "Resultado",
-    
-    "ColocInstituicaoCodigo",
-    "ColocInstituicaoNome",
-    "ColocCursoCodigo",
-    "ColocCursoNome",
-    "Tipo",
-    
-    "ColocOrdemCurso",
-    
-    "1-OpcaoInstituicaoCodigo",
-    "1-OpcaoInstituicaoNome",
-    "1-OpcaoCursoCodigo",
-    "1-OpcaoCursoNome",
-    "1-OpcaoNotaCandidatura",
-    "1-OpcaoContingente",
-    "1-OpcaoOrdemCandidato",
-    
-    "2-OpcaoInstituicaoCodigo",
-    "2-OpcaoInstituicaoNome",
-    "2-OpcaoCursoCodigo",
-    "2-OpcaoCursoNome",
-    "2-OpcaoNotaCandidatura",
-    "2-OpcaoContingente",
-    "2-OpcaoOrdemCandidato",
-    
-    "3-OpcaoInstituicaoCodigo",
-    "3-OpcaoInstituicaoNome",
-    "3-OpcaoCursoCodigo",
-    "3-OpcaoCursoNome",
-    "3-OpcaoNotaCandidatura",
-    "3-OpcaoContingente",
-    "3-OpcaoOrdemCandidato",
-    
-    "4-OpcaoInstituicaoCodigo",
-    "4-OpcaoInstituicaoNome",
-    "4-OpcaoCursoCodigo",
-    "4-OpcaoCursoNome",
-    "4-OpcaoNotaCandidatura",
-    "4-OpcaoContingente",
-    "4-OpcaoOrdemCandidato",
-    
-    "5-OpcaoInstituicaoCodigo",
-    "5-OpcaoInstituicaoNome",
-    "5-OpcaoCursoCodigo",
-    "5-OpcaoCursoNome",
-    "5-OpcaoNotaCandidatura",
-    "5-OpcaoContingente",
-    "5-OpcaoOrdemCandidato",
-    
-    "6-OpcaoInstituicaoCodigo",
-    "6-OpcaoInstituicaoNome",
-    "6-OpcaoCursoCodigo",
-    "6-OpcaoCursoNome",
-    "6-OpcaoNotaCandidatura",
-    "6-OpcaoContingente",
-    "6-OpcaoOrdemCandidato"
-  ]
+  val List<String> fieldMapper
+  val Map<String, (String)=>Object> fieldParser
   
-  def static filesByYear(String dir) {
+  new() {
+    fieldMapper = newArrayList(#[
+      "NumeroCandidatoCurso",
+      "BI",
+      "Nome",
+      "NotaCandidaturaCurso",
+      "OpcaoCurso",
+      "PI",       //Provas de Ingresso 50%
+      "Nota12",
+      "Nota10_11",
+      
+      "Resultado",
+      "ColocInstituicaoCodigo",
+      "ColocInstituicaoNome",
+      "ColocCursoCodigo",
+      "ColocCursoNome",
+      "Tipo",
+      
+      "ColocOrdemCurso"
+    ])
+    
+    for(var n = 1; n < 7; n++) {
+      fieldMapper.add("OpcaoInstituicaoCodigo" + n)
+      fieldMapper.add("OpcaoInstituicaoNome" + n)
+      fieldMapper.add("OpcaoCursoCodigo" + n)
+      fieldMapper.add("OpcaoCursoNome" + n)
+      fieldMapper.add("OpcaoNotaCandidatura" + n)
+      fieldMapper.add("OpcaoContingente" + n)
+      fieldMapper.add("OpcaoOrdemCandidato" + n)
+    }
+    
+    fieldParser = new HashMap(#{
+      "BI" -> [ String it | '''«substring(0, 3)»*«substring(length - 3, length)»'''.toString ],
+      "NumeroCandidatoCurso" -> [ Integer.parseInt(it) ],
+      "NotaCandidaturaCurso" -> [ String it | Float.parseFloat(replace(',', '.')) ],
+      
+      "OpcaoCurso" -> [ Integer.parseInt(it) ],
+      "PI" -> [ String it | Float.parseFloat(replace(',', '.')) ],
+      "Nota12" -> [ Integer.parseInt(it) ],
+      "Nota10_11" -> [ Integer.parseInt(it) ],
+      
+      "Resultado" -> [ if (it == "Colocado" || it == "Colocada") true else false ],
+      
+      "ColocInstituicaoCodigo" -> [ Integer.parseInt(it) ],
+      "ColocCursoCodigo" -> [ Integer.parseInt(it) ]
+    })
+    
+    for(var n = 1; n < 7; n++) {
+      fieldParser.put("OpcaoInstituicaoCodigo" + n, [ Integer.parseInt(it) ])
+      fieldParser.put("OpcaoCursoCodigo" + n,[ Integer.parseInt(it) ])
+      fieldParser.put("OpcaoNotaCandidatura" + n, [ String it | Float.parseFloat(replace(',', '.')) ])
+      fieldParser.put("OpcaoOrdemCandidato" + n, [ Integer.parseInt(it) ])
+    }
+  }
+  
+  def filesByYear(String dir) {
     val years = new HashMap<Integer, List<String>>
     
     Files.list(Paths.get(dir)).forEach[
@@ -104,8 +94,16 @@ class CSVReader {
     return years as Map<Integer, List<String>>
   }
   
-  def static readFile(String filePath) {
-    logger.info('''Reading file: «filePath»''')
+  def parseFile(String filePath) {
+    logger.info('''Parsing file: «filePath»''')
+    
+    //construct Year
+    val year = try {
+      Integer.parseInt(filePath.substring(filePath.length - 4, filePath.length))
+    } catch(Throwable err) {
+      logger.error('''No correct file path to extract the Year: (file=«filePath»)''')
+      return null
+    }
     
     val lineNumber = new AtomicInteger(0)
     val path = Paths.get(filePath)
@@ -113,18 +111,36 @@ class CSVReader {
       .map[ split(";") ]
       .map[
         lineNumber.andIncrement
+        val fieldMap = new LinkedHashMap<String, Object>
         
-        val map = new LinkedHashMap<String, String>
         for (var n = 0; n < length; n++) {
-          if (n >= nameMapper.length) {
+          if (n >= fieldMapper.length) {
             logger.error('''Line to long at: (file=«filePath», line=«lineNumber», items=«n»)''')
             return null
           }
-            
-          map.put(nameMapper.get(n), get(n))
+          
+          val key = fieldMapper.get(n)
+          val rawValue = get(n)
+          
+          try {
+            if (!rawValue.empty) {
+              val parser = fieldParser.get(key)
+              val value = if (parser !== null) parser.apply(rawValue) else rawValue
+              fieldMap.put(key, value)
+            }
+          } catch(Throwable err) {
+            logger.error('''Parsing field (file=«filePath», line=«lineNumber», field=«key», value=«rawValue»): «err.class»''')
+            return null
+          }
         }
         
-        map as Map<String, String>
+        //put Year in line
+        fieldMap.put("Year", year)
+        
+        //put UID in line
+        fieldMap.put("UID", '''«fieldMap.get("BI")»-«fieldMap.get("Nome")»'''.toString)
+        
+        return fieldMap as Map<String, Object>
       ]
       .filter[ it !== null]
   }

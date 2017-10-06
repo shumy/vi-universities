@@ -6,9 +6,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 import org.neo4j.graphdb.GraphDatabaseService
 import org.neo4j.graphdb.Label
 import org.neo4j.graphdb.Node
-import org.neo4j.graphdb.Relationship
 import org.neo4j.graphdb.RelationshipType
-import org.neo4j.graphdb.Result
 import org.neo4j.graphdb.factory.GraphDatabaseFactory
 import org.neo4j.graphdb.factory.GraphDatabaseSettings
 import org.slf4j.LoggerFactory
@@ -34,14 +32,14 @@ class NeoDB {
     db.shutdown
   }
   
-  def Node node(String label, Map<String, String> props) {
+  def node(String label, Map<String, String> props) {
     db.createNode(Label.label(label)) => [
       for (kv: props.entrySet)
         setProperty(kv.key, kv.value)
     ]
   }
   
-  def Relationship edge(Node left, Node right, String name) {
+  def edge(Node left, Node right, String name) {
     left.createRelationshipTo(right, RelationshipType.withName(name))
   } 
   
@@ -57,13 +55,13 @@ class NeoDB {
     }
   }
   
-  def Result query(String cypher) {
-    logger.debug('''QUERY («cypher»)''')
+  def cypher(String cypher) {
+    //logger.debug('''QUERY («cypher»)''')
     db.execute(cypher)
   }
   
-  def Result query(String cypher, Map<String, Object> params) {
-    logger.debug('''QUERY («cypher», «params»)''')
+  def cypher(String cypher, Map<String, Object> params) {
+    //logger.debug('''QUERY («cypher»)''')
     db.execute(cypher, params)
   }
 }
