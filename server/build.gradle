@@ -44,7 +44,7 @@ jar {
     attributes 'Implementation-Title': project.name,
       'Implementation-Version': version, 
       'Built-By': 'micaelpedrosa@gmail.com',
-      'Main-Class': 'ieeta.viu.Command',
+      'Main-Class': 'ieeta.viu.ViuCLI',
       'Class-Path': configurations.compile.collect { 'deps/' + it.getName() }.join(' ')
   }
 }
