@@ -27,7 +27,7 @@ class CSVReader {
       "Nota12",
       "Nota10_11",
       
-      "Resultado",
+      "Colocado",
       "ColocInstituicaoCodigo",
       "ColocInstituicaoNome",
       "ColocCursoCodigo",
@@ -57,15 +57,10 @@ class CSVReader {
       "Nota12" -> [ Integer.parseInt(it) ],
       "Nota10_11" -> [ Integer.parseInt(it) ],
       
-      "Resultado" -> [ if (it == "Colocado" || it == "Colocada") true else false ],
-      
-      "ColocInstituicaoCodigo" -> [ Integer.parseInt(it) ],
-      "ColocCursoCodigo" -> [ Integer.parseInt(it) ]
+      "Colocado" -> [ if (it == "Colocado" || it == "Colocada") true else false ]
     })
     
     for(var n = 1; n < 7; n++) {
-      fieldParser.put("OpcaoInstituicaoCodigo" + n, [ Integer.parseInt(it) ])
-      fieldParser.put("OpcaoCursoCodigo" + n,[ Integer.parseInt(it) ])
       fieldParser.put("OpcaoNotaCandidatura" + n, [ String it | Float.parseFloat(replace(',', '.')) ])
       fieldParser.put("OpcaoOrdemCandidato" + n, [ Integer.parseInt(it) ])
     }

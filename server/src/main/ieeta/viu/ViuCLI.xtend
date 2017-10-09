@@ -64,7 +64,9 @@ class ViuCLI {
     val students = db.cypher('MATCH (a:Student) RETURN count(a) as n').head.get('n') as Long
     val institutions = db.cypher('MATCH (i:Institution) RETURN count(i) as n').head.get('n') as Long
     val courses = db.cypher('MATCH (c:Course) RETURN count(c) as n').head.get('n') as Long
-    val applications = db.cypher('MATCH (:Student)-[a:application]->(:Course) RETURN count(a) as n').head.get('n') as Long
+    val contingents = db.cypher('MATCH (c:Contingent) RETURN count(c) as n').head.get('n') as Long
+    val applications = db.cypher('MATCH (a:Application) RETURN count(a) as n').head.get('n') as Long
+    val results = db.cypher('MATCH (s:Student)-[p:placed]->(a:Application) RETURN count(p) as n').head.get('n') as Long
     
     new CSVReader().parseFile(path).forEach[ line |
       db.tx[
@@ -86,55 +88,56 @@ class ViuCLI {
                 i.name = $OpcaoInstituicaoNome«n»
             ''', line)
             
-            //create Course and link to Institution, Application
-            /*
-            MERGE (s)-[a:application]->(c)
-              ON CREATE SET
-              a.grade = $OpcaoNotaCandidatura«n»,
-              a.contingent = $OpcaoContingente«n»,
-              a.applicant_order = $OpcaoOrdemCandidato«n»
-            */
+            //create Course and link to Institution
             db.cypher('''
               MATCH (i:Institution { code: $OpcaoInstituicaoCodigo«n» })
-              MERGE (c:Course { code: $OpcaoCursoCodigo«n» })-[:belongs_to]->(i)
+              MERGE (c:Course { code: $OpcaoCursoCodigo«n» })-[:of]->(i)
                 ON CREATE SET
                   c.name = $OpcaoCursoNome«n»
             ''', line)
             
-            //create Application
-            if (line.get("OpcaoNotaCandidatura" + n) !== null)
+            //create Contingent and Application
+            if (line.get("OpcaoNotaCandidatura" + n) !== null) {
               db.cypher('''
-                MATCH (s:Student { uid: $UID }), (c:Course { code: $OpcaoCursoCodigo«n» })-[:belongs_to]->(i:Institution { code: $OpcaoInstituicaoCodigo«n» })
-                MERGE (s)-[a:application]->(c)
-                  ON CREATE SET
-                  a.year = $Year,
-                  a.grade = $OpcaoNotaCandidatura«n»,
-                  a.contingent = $OpcaoContingente«n»,
-                  a.applicant_order = $OpcaoOrdemCandidato«n»
+                MERGE (con:Contingent { name: $OpcaoContingente«n» })
               ''', line)
-            else
+              
+              db.cypher('''
+                MATCH (s:Student { uid: $UID }), (con:Contingent { name: $OpcaoContingente«n» }), (c:Course { code: $OpcaoCursoCodigo«n» })-[:of]->(i:Institution { code: $OpcaoInstituicaoCodigo«n» })
+                MERGE (s)<-[:from]-(a:Application { year: $Year })-[:on]->(c)
+                  ON CREATE SET
+                  a.order = «n»,
+                  a.grade = $OpcaoNotaCandidatura«n»,
+                  a.applicant_order = $OpcaoOrdemCandidato«n»
+                MERGE (a)-[:in]->(con)
+              ''', line)
+            } else
               logger.warn('''Non existent grade: (uid=«line.get("UID")», application=«n»)''')
           }
         }
+        
+        //create placed result
+        if (line.get("Colocado") as Boolean)
+          db.cypher('''
+            MATCH (s:Student { uid: $UID })<-[:from]-(a:Application { year: $Year })-[:on]->(c:Course { code: $ColocCursoCodigo })-[:of]->(i:Institution { code: $ColocInstituicaoCodigo })
+            MERGE (s)-[:placed]->(a)
+          ''', line)
       ]
     ]
     
     val newStudents = db.cypher('MATCH (a:Student) RETURN count(a) as n').head.get('n') as Long
     val newInstitutions = db.cypher('MATCH (i:Institution) RETURN count(i) as n').head.get('n') as Long
     val newCourses = db.cypher('MATCH (c:Course) RETURN count(c) as n').head.get('n') as Long
-    val newApplications = db.cypher('MATCH (:Student)-[a:application]->(:Course) RETURN count(a) as n').head.get('n') as Long
+    val newContingents = db.cypher('MATCH (c:Contingent) RETURN count(c) as n').head.get('n') as Long
+    val newApplications = db.cypher('MATCH (a:Application) RETURN count(a) as n').head.get('n') as Long
+    val newResults = db.cypher('MATCH (s:Student)-[p:placed]->(a:Application) RETURN count(p) as n').head.get('n') as Long
     
     println('''Students (total=«newStudents», loaded=«newStudents-students»)''')
     println('''Institutions (total=«newInstitutions», loaded=«newInstitutions-institutions»)''')
     println('''Courses (total=«newCourses», loaded=«newCourses-courses»)''')
+    println('''Contingents (total=«newContingents», loaded=«newContingents-contingents»)''')
     println('''Applications (total=«newApplications», loaded=«newApplications-applications»)''')
-    
-    
-    println(db.cypher('''
-      MATCH (s:Student)-[a:application]->(c:Course)
-      WHERE s.uid = '135*368-NELSON DE JESUS RODRIGUES'
-      RETURN a.applicant_order, a.year, a.grade, a.contingent, c.name
-    ''').resultAsString)
+    println('''Results (total=«newResults», loaded=«newResults-results»)''')
     
     /*
     println(db.cypher('''
@@ -155,8 +158,23 @@ class ViuCLI {
     ''').resultAsString)
     
     println(db.cypher('''
-      MATCH (c:Course)-[:belongs_to]->(i:Institution)
+      MATCH (c:Course)-[:of]->(i:Institution)
       RETURN i.code, i.name, c.code, c.name LIMIT 5
+    ''').resultAsString)
+    
+    println(db.cypher('''
+      MATCH (c:Contingent) RETURN c.name
+    ''').resultAsString)    
+    
+    println(db.cypher('''
+      MATCH (a:Application)-[:in]->(c:Contingent)
+      RETURN a.order, a.year, a.grade, a.applicant_order, c.name
+      ORDER BY a.applicant_order LIMIT 5
+    ''').resultAsString)
+    
+    println(db.cypher('''
+      MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
+      RETURN s.name, a.year, a.grade, a.order, c.name, i.name LIMIT 5
     ''').resultAsString)
     */
   }
