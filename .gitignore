@@ -2,10 +2,12 @@
 .classpath
 .project
 *.log
+.vscode
 
 .settings/
 .gradle/
 
+node_modules/
 bin/
 build/
 

@@ -1,0 +1,2 @@
+#!/bin/bash
+java -Dlogback.configurationFile=logback.xml -jar ./server/build/libs/vi-universities-0.1.0.jar "$@"

@@ -25,9 +25,14 @@ dependencies {
   compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.12.0'
   
   compile 'info.picocli:picocli:1.0.1'
+  compile 'com.google.code.gson:gson:2.8.2'
+  
+  compile ('com.sparkjava:spark-core:2.3') {
+    exclude group: 'org.slf4j', module: 'slf4j-simple'
+  }
   
   compile 'org.neo4j:neo4j-kernel:3.1.7'
-  compile('org.neo4j:neo4j-cypher:3.1.7') {
+  compile ('org.neo4j:neo4j-cypher:3.1.7') {
     exclude group: 'org.neo4j', module: 'neo4j-cypher-compiler-2.3'
     exclude group: 'org.scala-lang', module: 'scala-reflect'
   }

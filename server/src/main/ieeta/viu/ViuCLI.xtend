@@ -18,6 +18,9 @@ class RCommand {
   @Option(names = #["--stack"], help = true, description = "Display the stack trace error if any.")
   public boolean stack
   
+  @Option(names = #["--server"], help = true, description = "Run the HTTP server.")
+  public boolean server
+  
   @Option(names = #["-h", "--help"], help = true, description = "Display this help and exit.")
   public boolean help
   
@@ -42,6 +45,11 @@ class ViuCLI {
         return
       }
       
+      if (cmd.server) {
+        HTTPServer.start
+        return
+      }
+      
       if (cmd.path !== null)
         loadFile(cmd.path)
       
@@ -61,12 +69,19 @@ class ViuCLI {
   def static loadFile(String path) {
     val db = new NeoDB("data/viu", false)
     
-    val students = db.cypher('MATCH (a:Student) RETURN count(a) as n').head.get('n') as Long
-    val institutions = db.cypher('MATCH (i:Institution) RETURN count(i) as n').head.get('n') as Long
-    val courses = db.cypher('MATCH (c:Course) RETURN count(c) as n').head.get('n') as Long
-    val contingents = db.cypher('MATCH (c:Contingent) RETURN count(c) as n').head.get('n') as Long
-    val applications = db.cypher('MATCH (a:Application) RETURN count(a) as n').head.get('n') as Long
-    val results = db.cypher('MATCH (s:Student)-[p:placed]->(a:Application) RETURN count(p) as n').head.get('n') as Long
+    val studentsQuery = 'MATCH (a:Student) RETURN count(a) as n'
+    val institutionsQuery = 'MATCH (i:Institution) RETURN count(i) as n'
+    val coursesQuery = 'MATCH (c:Course) RETURN count(c) as n'
+    val contingentsQuery = 'MATCH (c:Contingent) RETURN count(c) as n'
+    val applicationsQuery = 'MATCH (a:Application) RETURN count(a) as n'
+    val resultsQuery = 'MATCH (s:Student)-[p:placed]->(a:Application) RETURN count(p) as n'
+    
+    val students = db.cypher(studentsQuery).head.get('n') as Long
+    val institutions = db.cypher(institutionsQuery).head.get('n') as Long
+    val courses = db.cypher(coursesQuery).head.get('n') as Long
+    val contingents = db.cypher(contingentsQuery).head.get('n') as Long
+    val applications = db.cypher(applicationsQuery).head.get('n') as Long
+    val results = db.cypher(resultsQuery).head.get('n') as Long
     
     new CSVReader().parseFile(path).forEach[ line |
       db.tx[
@@ -125,12 +140,12 @@ class ViuCLI {
       ]
     ]
     
-    val newStudents = db.cypher('MATCH (a:Student) RETURN count(a) as n').head.get('n') as Long
-    val newInstitutions = db.cypher('MATCH (i:Institution) RETURN count(i) as n').head.get('n') as Long
-    val newCourses = db.cypher('MATCH (c:Course) RETURN count(c) as n').head.get('n') as Long
-    val newContingents = db.cypher('MATCH (c:Contingent) RETURN count(c) as n').head.get('n') as Long
-    val newApplications = db.cypher('MATCH (a:Application) RETURN count(a) as n').head.get('n') as Long
-    val newResults = db.cypher('MATCH (s:Student)-[p:placed]->(a:Application) RETURN count(p) as n').head.get('n') as Long
+    val newStudents = db.cypher(studentsQuery).head.get('n') as Long
+    val newInstitutions = db.cypher(institutionsQuery).head.get('n') as Long
+    val newCourses = db.cypher(coursesQuery).head.get('n') as Long
+    val newContingents = db.cypher(contingentsQuery).head.get('n') as Long
+    val newApplications = db.cypher(applicationsQuery).head.get('n') as Long
+    val newResults = db.cypher(resultsQuery).head.get('n') as Long
     
     println('''Students (total=«newStudents», loaded=«newStudents-students»)''')
     println('''Institutions (total=«newInstitutions», loaded=«newInstitutions-institutions»)''')
