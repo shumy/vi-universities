@@ -1,0 +1,33 @@
+class Student {
+    uid: string
+    name: string
+    grade_12: float
+    grade_10_11: float
+}
+
+class Application {
+    order: int
+    year: int
+    grade: float
+    applicant_order: int
+}
+
+class Contingent {
+    name: string
+}
+
+class Course {
+    code: string
+    name: string
+}
+
+class Institution {
+    code: string
+    name: string
+}
+
+Student -right-> Application:placed
+Application --> Contingent:in
+Application --> Student:from
+Application -right-> Course:on
+Course -right-> Institution:of

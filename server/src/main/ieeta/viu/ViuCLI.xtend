@@ -153,45 +153,6 @@ class ViuCLI {
     println('''Contingents (total=«newContingents», loaded=«newContingents-contingents»)''')
     println('''Applications (total=«newApplications», loaded=«newApplications-applications»)''')
     println('''Results (total=«newResults», loaded=«newResults-results»)''')
-    
-    /*
-    println(db.cypher('''
-      MATCH (a:Student)
-      RETURN a.uid, a.name, a.grade_12, a.grade_10_11 LIMIT 5
-    ''').resultAsString)
-    
-    
-    println(db.cypher('''
-      MATCH (i:Institution)
-      RETURN i.code, i.name LIMIT 5
-    ''').resultAsString)
-    
-    
-    println(db.cypher('''
-      MATCH (c:Course)
-      RETURN c.code, c.name LIMIT 5
-    ''').resultAsString)
-    
-    println(db.cypher('''
-      MATCH (c:Course)-[:of]->(i:Institution)
-      RETURN i.code, i.name, c.code, c.name LIMIT 5
-    ''').resultAsString)
-    
-    println(db.cypher('''
-      MATCH (c:Contingent) RETURN c.name
-    ''').resultAsString)    
-    
-    println(db.cypher('''
-      MATCH (a:Application)-[:in]->(c:Contingent)
-      RETURN a.order, a.year, a.grade, a.applicant_order, c.name
-      ORDER BY a.applicant_order LIMIT 5
-    ''').resultAsString)
-    
-    println(db.cypher('''
-      MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
-      RETURN s.name, a.year, a.grade, a.order, c.name, i.name LIMIT 5
-    ''').resultAsString)
-    */
   }
   
   def static void testCSV() {

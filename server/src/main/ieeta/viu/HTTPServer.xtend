@@ -1,7 +1,6 @@
 package ieeta.viu
 
 import static spark.Spark.*
-import org.slf4j.LoggerFactory
 import com.google.gson.Gson
 
 class HTTPServer {
@@ -17,9 +16,16 @@ class HTTPServer {
     after[req, res | res.type("application/json") ]
     
     get("/query/:cypher") [ req, res |
-      val cypher = req.params("cypher")
-      val result = db.cypher(cypher).toList
-      gson.toJson(result)
+      res.header("Access-Control-Allow-Origin", "*")
+      
+      try {
+        val cypher = req.params("cypher")
+        val result = db.cypher(cypher).toList
+        gson.toJson(result)
+      } catch (Throwable err) {
+        halt(500, err.message)
+        return null
+      }
     ]
   }
 }
