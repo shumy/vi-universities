@@ -10,12 +10,13 @@ import {
   MatInputModule
 } from '@angular/material';
 
+import { Ng2GoogleChartsModule } from 'ng2-google-charts';
 import { AppComponent } from './app.component';
 
 @NgModule({
   declarations: [ AppComponent ],
   imports: [
-    FormsModule, ReactiveFormsModule,
+    Ng2GoogleChartsModule, FormsModule, ReactiveFormsModule,
     HttpClientModule, BrowserModule, BrowserAnimationsModule,
     MatGridListModule, MatToolbarModule,
     MatTabsModule, MatButtonModule, MatIconModule,

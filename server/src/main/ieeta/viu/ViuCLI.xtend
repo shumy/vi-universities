@@ -1,11 +1,14 @@
 package ieeta.viu
 
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.HashMap
+import java.util.stream.Stream
+import org.slf4j.LoggerFactory
 import picocli.CommandLine
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 import picocli.CommandLine.Parameters
-import org.slf4j.LoggerFactory
 
 @Command(
   name = "viu-cli", footer = "Copyright(c) 2017",
@@ -51,7 +54,7 @@ class ViuCLI {
       }
       
       if (cmd.path !== null)
-        loadFile(cmd.path)
+        loadFiles(cmd.path)
       
       if (cmd.query !== null) {
         val db = new NeoDB("data/viu")
@@ -66,7 +69,17 @@ class ViuCLI {
     }
   }
   
-  def static loadFile(String path) {
+  def static loadFiles(String path) {
+    val files = if (path.contains("*")) {
+      val index = path.lastIndexOf("/")
+      val dir = path.substring(0, index)
+      val fileMatch = path.substring(index + 1)
+      
+      Files.list(Paths.get(dir))
+        .filter[ toFile.name.matches(fileMatch)]
+        .map[ dir + "/" + toFile.name ]
+    } else Stream.of(path)
+    
     val db = new NeoDB("data/viu", false)
     
     val studentsQuery = 'MATCH (a:Student) RETURN count(a) as n'
@@ -83,60 +96,63 @@ class ViuCLI {
     val applications = db.cypher(applicationsQuery).head.get('n') as Long
     val results = db.cypher(resultsQuery).head.get('n') as Long
     
-    new CSVReader().parseFile(path).forEach[ line |
-      db.tx[
-        //create Student...
-        db.cypher('''
-          MERGE (s:Student { uid: $UID })
-          ON CREATE SET
-            s.name = $Nome,
-            s.grade_12 = $Nota12,
-            s.grade_10_11 = $Nota10_11
-        ''', line)
-        
-        for (var n = 1; n < 7; n++) {
-          if (line.get("OpcaoInstituicaoCodigo" + n) !== null) {
-            //create Institution
-            db.cypher('''
-              MERGE (i:Institution { code: $OpcaoInstituicaoCodigo«n» })
-              ON CREATE SET
-                i.name = $OpcaoInstituicaoNome«n»
-            ''', line)
-            
-            //create Course and link to Institution
-            db.cypher('''
-              MATCH (i:Institution { code: $OpcaoInstituicaoCodigo«n» })
-              MERGE (c:Course { code: $OpcaoCursoCodigo«n» })-[:of]->(i)
-                ON CREATE SET
-                  c.name = $OpcaoCursoNome«n»
-            ''', line)
-            
-            //create Contingent and Application
-            if (line.get("OpcaoNotaCandidatura" + n) !== null) {
+    val csvReader = new CSVReader
+    files.forEach[ filePath |
+      csvReader.parseFile(filePath).forEach[ line |
+        db.tx[
+          //create Student...
+          db.cypher('''
+            MERGE (s:Student { uid: $UID })
+            ON CREATE SET
+              s.name = $Nome,
+              s.grade_12 = $Nota12,
+              s.grade_10_11 = $Nota10_11
+          ''', line)
+          
+          for (var n = 1; n < 7; n++) {
+            if (line.get("OpcaoInstituicaoCodigo" + n) !== null) {
+              //create Institution
               db.cypher('''
-                MERGE (con:Contingent { name: $OpcaoContingente«n» })
+                MERGE (i:Institution { code: $OpcaoInstituicaoCodigo«n» })
+                ON CREATE SET
+                  i.name = $OpcaoInstituicaoNome«n»
               ''', line)
               
+              //create Course and link to Institution
               db.cypher('''
-                MATCH (s:Student { uid: $UID }), (con:Contingent { name: $OpcaoContingente«n» }), (c:Course { code: $OpcaoCursoCodigo«n» })-[:of]->(i:Institution { code: $OpcaoInstituicaoCodigo«n» })
-                MERGE (s)<-[:from]-(a:Application { year: $Year })-[:on]->(c)
+                MATCH (i:Institution { code: $OpcaoInstituicaoCodigo«n» })
+                MERGE (c:Course { code: $OpcaoCursoCodigo«n» })-[:of]->(i)
                   ON CREATE SET
-                  a.order = «n»,
-                  a.grade = $OpcaoNotaCandidatura«n»,
-                  a.applicant_order = $OpcaoOrdemCandidato«n»
-                MERGE (a)-[:in]->(con)
+                    c.name = $OpcaoCursoNome«n»
               ''', line)
-            } else
-              logger.warn('''Non existent grade: (uid=«line.get("UID")», application=«n»)''')
+              
+              //create Contingent and Application
+              if (line.get("OpcaoNotaCandidatura" + n) !== null) {
+                db.cypher('''
+                  MERGE (con:Contingent { name: $OpcaoContingente«n» })
+                ''', line)
+                
+                db.cypher('''
+                  MATCH (s:Student { uid: $UID }), (con:Contingent { name: $OpcaoContingente«n» }), (c:Course { code: $OpcaoCursoCodigo«n» })-[:of]->(i:Institution { code: $OpcaoInstituicaoCodigo«n» })
+                  MERGE (s)<-[:from]-(a:Application { year: $Year })-[:on]->(c)
+                    ON CREATE SET
+                    a.order = «n»,
+                    a.grade = $OpcaoNotaCandidatura«n»,
+                    a.applicant_order = $OpcaoOrdemCandidato«n»
+                  MERGE (a)-[:in]->(con)
+                ''', line)
+              } else
+                logger.warn('''Non existent grade: (uid=«line.get("UID")», application=«n»)''')
+            }
           }
-        }
-        
-        //create placed result
-        if (line.get("Colocado") as Boolean)
-          db.cypher('''
-            MATCH (s:Student { uid: $UID })<-[:from]-(a:Application { year: $Year })-[:on]->(c:Course { code: $ColocCursoCodigo })-[:of]->(i:Institution { code: $ColocInstituicaoCodigo })
-            MERGE (s)-[:placed]->(a)
-          ''', line)
+          
+          //create placed result
+          if (line.get("Colocado") as Boolean)
+            db.cypher('''
+              MATCH (s:Student { uid: $UID })<-[:from]-(a:Application { year: $Year })-[:on]->(c:Course { code: $ColocCursoCodigo })-[:of]->(i:Institution { code: $ColocInstituicaoCodigo })
+              MERGE (s)-[:placed]->(a)
+            ''', line)
+        ]
       ]
     ]
     
