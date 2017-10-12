@@ -26,7 +26,7 @@ export class AppComponent {
   constructor(private http: HttpClient, private change: ChangeDetectorRef) {
     this.setData(
       this.applicationsByYear,
-      "MATCH (a:Application) RETURN a.year as year, count(*) as total ORDER BY year",
+      "MATCH (s:Student)-[:placed]->(a:Application) RETURN a.year as year, count(s) as total ORDER BY year",
       line => [line.year + "", line.total]
     )
   }

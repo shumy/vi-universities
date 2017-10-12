@@ -56,12 +56,12 @@ class NeoDB {
   }
   
   def cypher(String cypher) {
-    //logger.debug('''QUERY («cypher»)''')
+    logger.debug('''QUERY («cypher»)''')
     db.execute(cypher)
   }
   
   def cypher(String cypher, Map<String, Object> params) {
-    //logger.debug('''QUERY («cypher»)''')
+    logger.debug('''QUERY («cypher»)''')
     db.execute(cypher, params)
   }
 }

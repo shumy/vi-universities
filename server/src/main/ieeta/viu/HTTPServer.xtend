@@ -11,7 +11,6 @@ class HTTPServer {
     val db = new NeoDB("data/viu")
     
     staticFileLocation("/ui")
-    externalStaticFileLocation("/ui")
     
     after[req, res | res.type("application/json") ]
     

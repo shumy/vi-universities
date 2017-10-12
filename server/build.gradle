@@ -17,6 +17,8 @@ repositories {
 
 sourceSets {
   main.java.srcDirs= ['src/main']
+  main.resources.srcDirs= ['build/web']
+  
   test.java.srcDirs= ['src/test']
 }
 
