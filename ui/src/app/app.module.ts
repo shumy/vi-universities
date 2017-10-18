@@ -4,6 +4,8 @@ import { HttpClientModule } from '@angular/common/http';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
+import { routing } from './app.routes';
+
 import {
   MatGridListModule, MatToolbarModule,
   MatTabsModule, MatButtonModule, MatIconModule,
@@ -11,18 +13,25 @@ import {
 } from '@angular/material';
 
 import { Ng2GoogleChartsModule } from 'ng2-google-charts';
+
 import { AppComponent } from './app.component';
+import { QueryService } from './query.srv';
+
+import { HomeRoute }                   from './route/home.comp';
+import { QueryRoute }                  from './route/query.comp';
+import { ModelRoute }                  from './route/model.comp';
 
 @NgModule({
-  declarations: [ AppComponent ],
+  bootstrap: [AppComponent],
+  providers: [QueryService],
+  declarations: [ AppComponent, HomeRoute, QueryRoute, ModelRoute ],
   imports: [
+    routing,
     Ng2GoogleChartsModule, FormsModule, ReactiveFormsModule,
     HttpClientModule, BrowserModule, BrowserAnimationsModule,
     MatGridListModule, MatToolbarModule,
     MatTabsModule, MatButtonModule, MatIconModule,
     MatInputModule
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
+  ]
 })
 export class AppModule { }

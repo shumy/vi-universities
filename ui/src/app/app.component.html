@@ -1,46 +1,12 @@
 <mat-toolbar class="fixed-header" color="primary">
   <mat-icon>home</mat-icon>
-  <button mat-button (click)="menu = 'visual'">
+  <button mat-button [routerLink]="['home']">
     <strong>Visual</strong>
   </button>
   <span class="fill-remaining-space"></span>
-  <button mat-button (click)="menu = 'query'">Query</button>
-  <button mat-button (click)="menu = 'model'">Model</button>
+  <button mat-button [routerLink]="['query']">Query</button>
+  <button mat-button [routerLink]="['model']">Model</button>
 </mat-toolbar>
 <div class="content">
-  <div *ngIf="menu == 'visual'" class="button-row">
-    <google-chart [data]="applicationsByYear"></google-chart>
-  </div>
-
-  <div *ngIf="menu == 'query'">
-    <mat-form-field style="width: 100%" (keyup.enter)="query()">
-      <input #inpQuery matInput placeholder="Query" [formControl]="queryFormControl">
-      <mat-error *ngIf="queryFormControl.hasError('backend')">
-        Invalid Query: <strong>{{queryFormControl.errors['backend']}}</strong>
-      </mat-error>
-    </mat-form-field>
-    
-    <mat-grid-list *ngIf="columns.length > 0" [cols]="columns.length" rowHeight="5:1">
-      <div *ngFor="let col of columns">
-        <mat-grid-tile style="border-width: 0px 0px 1px 0px; border-style: solid; background-color: darkgrey;">{{col}}</mat-grid-tile>
-      </div>
-      <div *ngFor="let line of dataSource">
-        <mat-grid-tile *ngFor="let col of columns">{{line[col]}}</mat-grid-tile>
-      </div>
-    </mat-grid-list>
-  </div>
-
-  <div *ngIf="menu == 'model'">
-    <img src="assets/model.png"/>
-    <div style="margin-bottom: 5px;">The model is a Neo4j graph that can be consulted with a <a href="https://neo4j.com/developer/cypher-query-language/">Cypher Query</a></div>
-    <div style="display: grid;">
-      <strong>Some query examples: </strong>
-      <span>MATCH (a:Application) RETURN a.year, count(*), min(a.grade), max(a.grade) ORDER BY a.year</span>
-      <span>MATCH (i:Institution) RETURN i.code AS code , i.name AS name LIMIT 5</span>
-      <span>MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course) RETURN s.name, a.year, a.grade, c.name LIMIT 5</span>
-      <span>MATCH (c:Course)-[:of]->(i:Institution) WHERE i.name = 'Universidade de Aveiro' RETURN i.code, i.name, c.code, c.name</span>
-      <span>MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course) WHERE c.code = '9361' RETURN s.name, a.grade, a.year, a.order ORDER BY a.grade DESC LIMIT 5</span>
-    </div>
-  </div>
+  <router-outlet></router-outlet>
 </div>
-
