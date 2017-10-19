@@ -10,6 +10,9 @@ import * as d3 from 'd3';
 export class PositionsRoute {
   @ViewChild('chart') chart
 
+  height = 400
+  margin = 25
+
   // Universidade de Aveiro -> 0300
   //   Engenharia de Computadores e Telemática -> 9361
   //   Engenharia Eletrónica e Telecomunicações -> 9365
@@ -31,6 +34,8 @@ export class PositionsRoute {
       .range(["red", "green", "blue", "purple", "yellow", "black"])
 
     this.canvas = d3.select(this.chart.nativeElement)
+      .attr("width", "100%")
+      .attr("height", this.height + 'px')
   
     this.getTestData()
       .then(data => this.draw(this.transform(data)))
@@ -99,28 +104,44 @@ export class PositionsRoute {
   draw(data: any[]) {
     let barWidth = 57 //this.width / data.length
 
-    let scale = d3.scaleLinear()
-      .range([0, 400])
-      .domain([0, d3.max(data, (course: any) => {
-        let sum = 0
-        course.years[this.yearSelection].forEach(placed => sum += placed.value)
-        return sum
-      })])
+    let max = d3.max(data, (course: any) => {
+      let sum = 0
+      course.years[this.yearSelection].forEach(placed => sum += placed.value)
+      return sum
+    })
 
-    let courseBar = this.canvas.selectAll("g")
-      .data(data)
-        .enter().append("g")
-          .attr("transform", (d, i) => `translate(${i*barWidth}, 0)`)
+    let scaleY = d3.scaleLinear()
+      .range([10, this.height])
+      .domain([0, max])
+    
+    let yAxis = d3.axisLeft(d3.scaleLinear().range([this.height, 10]).domain([0, max]))
+
+    this.canvas
+      .append("g")
+        .attr("class", "y-axis")
+        .attr("transform", `translate(${this.margin - 5}, -10)`)
+        .call(yAxis);
+
+    let courseBar = this.canvas
+      .select('.chart')
+        .attr("transform", `translate(${this.margin}, ${this.height}) scale(1, -1)`)
+      .selectAll(".course")
+        .data(data)
+          .enter().append("g")
+            .attr("class", "course")
+            .attr("transform", (d, i) => `translate(${i*barWidth}, 0)`)
 
     courseBar.selectAll(".placed")
       .data((course: any) => course.years[this.yearSelection])
         .enter().append("rect")
           .attr("class", "placed")
-          .attr("y", (placed: any) => scale(placed.start))
-          .attr("height", (placed: any) => scale(placed.value))
+          .attr("y", (placed: any) => scaleY(placed.start))
+          .attr("height", (placed: any) => scaleY(placed.value))
           .attr("width", barWidth - 7)
           .attr("fill", (_, i) => this.color(i))
 
+    courseBar.exit().remove()
+    
     /*courseBar.selectAll(".option")
       .data((course: any) => [ course.years[this.yearSelection][0] ])
         .enter().append("rect")
