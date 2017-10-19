@@ -21,10 +21,15 @@ import { HomeRoute }                   from './route/home.comp';
 import { QueryRoute }                  from './route/query.comp';
 import { ModelRoute }                  from './route/model.comp';
 
+import { PositionsRoute }              from './route/positions.comp';
+
 @NgModule({
   bootstrap: [AppComponent],
   providers: [QueryService],
-  declarations: [ AppComponent, HomeRoute, QueryRoute, ModelRoute ],
+  declarations: [
+    AppComponent, HomeRoute, QueryRoute, ModelRoute,
+    PositionsRoute
+  ],
   imports: [
     routing,
     Ng2GoogleChartsModule, FormsModule, ReactiveFormsModule,
