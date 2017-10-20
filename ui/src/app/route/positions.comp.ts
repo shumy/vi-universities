@@ -135,12 +135,12 @@ export class PositionsRoute {
 
     this.color = d3.scaleLinear<string>()
       .domain([0, 1, 2, 3, 4, 5])
-      .range(["red", "green", "blue", "purple", "yellow", "black"])
+      .range([ "#570AB2", "#AB0AB2", "#B20A65", "#B20A11", "#B2570A", "#B2AB0A"])
 
     this.svg = d3.select(this.chart.nativeElement)
       .append("g")
         .attr("transform", `translate(${this.padding.left}, ${this.padding.top})`)
-      
+
     this.svg.append("g").attr("class", "x-axis")
     this.svg.append("g").attr("class", "y-axis")
   }
@@ -183,6 +183,14 @@ export class PositionsRoute {
       .data((course: any) => course.years[this.yearSelection] || [])
         .enter().append("rect")
           .attr("class", "placed")
+          .on("mousemove", (placed: any) => {
+            d3.select(".tooltip")
+              .style("display", "inline-block")
+              .style("left", d3.event.pageX - 28 + "px")
+              .style("top", d3.event.pageY - 50 + "px")
+              .html("Placed<br>" + placed.value)
+          })
+          .on("mouseout", _ => d3.select(".tooltip").style("display", "none"))
 
     this.redraw()
 

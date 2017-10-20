@@ -25,3 +25,18 @@ body {
 .full-width {
   width: 100%;
 }
+
+.tooltip {
+  position: absolute;
+  display: none;
+  pointer-events: none;
+
+  z-index: 10;
+  min-width: 50px;
+  height: auto;
+
+  background: none repeat scroll 0 0 #ffffff;
+  border: 1px solid #6F257F;
+  padding: 5px;
+  text-align: center;
+}
