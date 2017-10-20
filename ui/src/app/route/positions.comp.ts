@@ -32,7 +32,7 @@ export class PositionsRoute {
   years = [2013, 2014, 2015, 2016]
 
   //client filters
-  yearSelection = 2015
+  yearSelection = 2013
 
   data: any[]
 
@@ -61,7 +61,7 @@ export class PositionsRoute {
     }
 
     //refresh data
-    this.getTestData().then(results => {
+    this.getData().then(results => {
       this.data = this.transform(results)
       this.refresh()
       this.draw()
@@ -71,7 +71,7 @@ export class PositionsRoute {
   getTestData() {
     return new Promise<any[]>((resolve, reject) => {
       let data = [
-        { course: "0300-9361", years: { 2015: [ 30, 20, 5, 3 ], 2016: [25, 10, 5, 1 ] } },
+        { course: "0300-9361", years: { 2015: [ 30, 20, 5, null, 3 ], 2016: [25, 10, 5, 1 ] } },
         { course: "0300-9365", years: { 2015: [ 35, 25, 10, 5, 2, 1 ], 2016: [40, 30, 6, 3, 1 ] } }
       ]
 
@@ -116,9 +116,9 @@ export class PositionsRoute {
     results.forEach(c => Object.keys(c.years).forEach(key => {
       let year = c.years[key]
       if (year.length > 0) {
-        year[0] = { start: 0, value: year[0] | 0 }
+        year[0] = { start: 0, value: year[0] || 0 }
         for(let i = 1; i < year.length; i++)
-          year[i] = { start: year[i-1].start + year[i-1].value, value: year[i] | 0 }
+          year[i] = { start: year[i-1].start + year[i-1].value, value: year[i] || 0 }
       }
     }))
 
@@ -180,7 +180,7 @@ export class PositionsRoute {
           .attr("class", "course")
         
     this.dataBars = this.courseBars.selectAll(".placed")
-      .data((course: any) => course.years[this.yearSelection])
+      .data((course: any) => course.years[this.yearSelection] || [])
         .enter().append("rect")
           .attr("class", "placed")
 
