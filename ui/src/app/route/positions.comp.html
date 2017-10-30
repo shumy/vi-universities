@@ -1,4 +1,12 @@
-<div style="border-color: black; border-width: 1px; border-style: dashed;">
-  <div class="tooltip"></div>
-  <svg #chart></svg>
+<div style="display: flex;">
+  <div #container class="chart-container">
+    <div class="tooltip"></div>
+    <svg #chart></svg>
+  </div>
+  <div>
+    <div style="display: flex; flex-direction: column; height: 100%">
+      <div style="align-self: center;">Year</div>
+      <mat-slider class="fill-remaining-space" vertical thumbLabel tickInterval="1" [min]="minYear" [max]="maxYear" [value]="yearSelection" (input)="setYearSelection($event.value)"></mat-slider>
+    </div>
+  </div>
 </div>

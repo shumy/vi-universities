@@ -9,7 +9,7 @@ import { routing } from './app.routes';
 import {
   MatGridListModule, MatToolbarModule,
   MatTabsModule, MatButtonModule, MatIconModule,
-  MatInputModule
+  MatInputModule, MatSliderModule
 } from '@angular/material';
 
 import { Ng2GoogleChartsModule } from 'ng2-google-charts';
@@ -36,7 +36,7 @@ import { PositionsRoute }              from './route/positions.comp';
     HttpClientModule, BrowserModule, BrowserAnimationsModule,
     MatGridListModule, MatToolbarModule,
     MatTabsModule, MatButtonModule, MatIconModule,
-    MatInputModule
+    MatInputModule, MatSliderModule
   ]
 })
 export class AppModule { }

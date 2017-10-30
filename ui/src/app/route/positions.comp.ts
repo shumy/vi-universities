@@ -8,6 +8,7 @@ import * as d3 from 'd3';
   templateUrl: './positions.comp.html'
 })
 export class PositionsRoute {
+  @ViewChild('container') container
   @ViewChild('chart') chart
 
   //scale configs
@@ -29,10 +30,12 @@ export class PositionsRoute {
 
   institution = '0300'
   courses = ['9361', '9365', '9119', 'G009' , '9251']
-  years = [2013, 2014, 2015, 2016]
+  
+  yearSelection: number
+  years: number[]
 
-  //client filters
-  yearSelection = 2013
+  minYear = 2009
+  maxYear = 2016
 
   data: any[]
 
@@ -48,7 +51,18 @@ export class PositionsRoute {
   courseBars: any
   dataBars: any
 
-  constructor(private qSrv: QueryService) {}
+  setYearSelection(yearValue) {
+    this.yearSelection = yearValue
+    this.refresh()
+    this.draw()
+  }
+
+  constructor(private qSrv: QueryService) {
+    this.years = []
+    this.yearSelection = this.maxYear
+    for (let i = this.minYear; i <= this.maxYear; i++)
+      this.years.push(i)
+  }
 
   ngAfterViewInit() {
     this.init()
@@ -136,13 +150,6 @@ export class PositionsRoute {
     this.color = d3.scaleLinear<string>()
       .domain([0, 1, 2, 3, 4, 5])
       .range([ "#570AB2", "#AB0AB2", "#B20A65", "#B20A11", "#B2570A", "#B2AB0A"])
-
-    this.svg = d3.select(this.chart.nativeElement)
-      .append("g")
-        .attr("transform", `translate(${this.padding.left}, ${this.padding.top})`)
-
-    this.svg.append("g").attr("class", "x-axis")
-    this.svg.append("g").attr("class", "y-axis")
   }
 
   // process d3 elements only related with data
@@ -170,9 +177,23 @@ export class PositionsRoute {
       .domain([0, max])
   }
 
+  clear() {
+    let chart = this.chart.nativeElement
+    while (chart.firstChild)
+      chart.removeChild(chart.firstChild)
+  }
+
   // process d3 elements related with new data
   draw() {
     console.log('DRAW')
+    this.clear()
+
+    this.svg = d3.select(this.chart.nativeElement)
+      .append("g")
+        .attr("transform", `translate(${this.padding.left}, ${this.padding.top})`)
+
+    this.svg.append("g").attr("class", "x-axis")
+    this.svg.append("g").attr("class", "y-axis")
 
     this.courseBars = this.svg.selectAll(".course")
       .data(this.data)
@@ -183,12 +204,12 @@ export class PositionsRoute {
       .data((course: any) => course.years[this.yearSelection] || [])
         .enter().append("rect")
           .attr("class", "placed")
-          .on("mousemove", (placed: any) => {
+          .on("mousemove", (placed, index) => {
             d3.select(".tooltip")
               .style("display", "inline-block")
               .style("left", d3.event.pageX - 28 + "px")
               .style("top", d3.event.pageY - 50 + "px")
-              .html("Placed<br>" + placed.value)
+              .html(`Option ${index + 1}<br>${placed.value}`)
           })
           .on("mouseout", _ => d3.select(".tooltip").style("display", "none"))
 
@@ -200,10 +221,10 @@ export class PositionsRoute {
 
   // process width/height
   resize() {
-    console.log('RESIZE')
+    console.log('RESIZE', this.container)
 
-    this.width = window.innerWidth - 10
-    this.height = window.innerHeight - 100
+    this.width = this.container.nativeElement.offsetWidth - 10
+    this.height = this.container.nativeElement.offsetHeight - 10
 
     this.innerWidth = this.width - this.padding.left - this.padding.right
     this.innerHeight = this.height - this.padding.top - this.padding.bottom
