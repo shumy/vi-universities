@@ -12,7 +12,7 @@ export class PositionsRoute {
   @ViewChild('chart') chart
 
   //scale configs
-  padding = { top: 20, right: 20, bottom: 20, left: 25 }
+  padding = { top: 20, right: 20, bottom: 35, left: 25 }
 
   //scale conventions
   width: number //= 800
@@ -28,7 +28,7 @@ export class PositionsRoute {
   //   Engenharia Computacional -> G009
   //   Tecnologias e Sistemas de Informação -> 9251
 
-  institution = '0300'
+  institutions = ['0300']
   courses = ['9361', '9365', '9119', 'G009' , '9251']
   
   yearSelection: number
@@ -37,6 +37,8 @@ export class PositionsRoute {
   minYear = 2009
   maxYear = 2016
 
+  metaDataKeys: string[]
+  metaData: {}
   data: any[]
 
   //d3 fixed elements
@@ -74,11 +76,15 @@ export class PositionsRoute {
       this.redraw()
     }
 
-    //refresh data
-    this.getData().then(results => {
-      this.data = this.transform(results)
-      this.refresh()
-      this.draw()
+    //get data
+    this.qSrv.getCourses(this.institutions, this.courses).then(md => {
+      this.metaDataKeys = Object.keys(md)
+      this.metaData = md
+      this.getData().then(results => {
+        this.data = this.transform(results)
+        this.refresh()
+        this.draw()
+      })
     })
   }
 
@@ -96,7 +102,7 @@ export class PositionsRoute {
   getData() {
     let query = `
       MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
-      WHERE i.code = '${this.institution}' AND c.code IN [${this.courses.map(_ => "'"+_+"'")}] AND a.year IN [${this.years}]
+      WHERE i.code IN [${this.institutions.map(_ => "'"+_+"'")}] AND c.code IN [${this.courses.map(_ => "'"+_+"'")}] AND a.year IN [${this.years}]
       WITH i.code AS institution, c.code AS course, a.year AS year, { option: a.order, placed: count(DISTINCT s) } AS options_sum
       WITH institution, course, { year: year, options: collect(options_sum) } as years_col
       RETURN institution, course, collect(years_col) as years
@@ -114,8 +120,10 @@ export class PositionsRoute {
               yeaLine.options.forEach(li => year[li.option - 1] = li.placed)
             })
 
+            let cCode = line.institution + '-' + line.course
             return {
-              course: line.institution + '-' + line.course,
+              code: cCode,
+              course: this.metaData[cCode].short,
               years: years
             }
           })
@@ -205,13 +213,13 @@ export class PositionsRoute {
         .enter().append("rect")
           .attr("class", "placed")
           .on("mousemove", (placed, index) => {
-            d3.select(".tooltip")
-              .style("display", "inline-block")
+            d3.select(".chart-tooltip")
+              .style("visibility", "visible")
               .style("left", d3.event.pageX - 28 + "px")
               .style("top", d3.event.pageY - 50 + "px")
               .html(`Option ${index + 1}<br>${placed.value}`)
           })
-          .on("mouseout", _ => d3.select(".tooltip").style("display", "none"))
+          .on("mouseout", _ => d3.select(".chart-tooltip").style("visibility", "hidden"))
 
     this.redraw()
 

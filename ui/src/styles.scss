@@ -34,17 +34,73 @@ body {
   background-color: #f5f5f5;
 }
 
-.tooltip {
+.chart-title {
+  margin: 5px 10px 5px 10px;
+}
+
+.item-box {
+  margin: 3px 5px 3px 5px;
+  padding: 3px 5px 3px 5px;
+
+  background-color: #f5f5f5;
+}
+
+@mixin tooltip-base {
   position: absolute;
-  display: none;
+  visibility: hidden;
   pointer-events: none;
 
-  z-index: 10;
-  min-width: 50px;
-  height: auto;
-
-  background: none repeat scroll 0 0 #ffffff;
-  border: 1px solid #6F257F;
-  padding: 5px;
+  background-color: black;
+  color: #fff;
   text-align: center;
+  padding: 5px 5px 5px 5px;
+
+  height: auto;
+  z-index: 10;
+}
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+
+  &:hover {
+    .tooltiptext {
+      visibility: visible;
+    }  
+  }
+
+  .tooltiptext {
+    @include tooltip-base;
+    width: 150px;
+
+    &.right {
+      top: -5px;
+      left: 105%; 
+    }
+
+    &.left {
+      top: -5px;
+      right: 105%; 
+    }
+
+    &.top {
+      width: 120px;
+      bottom: 100%;
+      left: 50%; 
+      margin-left: -60px;
+    }
+
+    &.bottom {
+      width: 120px;
+      top: 100%;
+      left: 50%; 
+      margin-left: -60px;
+    }
+  }
+}
+
+.chart-tooltip {
+  @include tooltip-base;
+  min-width: 50px;
 }

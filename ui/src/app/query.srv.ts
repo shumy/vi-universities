@@ -8,6 +8,33 @@ export class QueryService {
   
   constructor(private http: HttpClient) {}
 
+  getCourses(institutions: string[], courses: string[]) {
+    let query = `
+      MATCH (c:Course)-[:of]->(i:Institution)
+      WHERE i.code IN [${institutions.map(_ => "'"+_+"'")}] AND c.code IN [${courses.map(_ => "'"+_+"'")}]
+      RETURN i.code, i.name, c.code, c.name
+    `
+
+    return new Promise<{}>((resolve, reject) => {
+      this.execQuery(query).subscribe((results: any[]) => {
+        let data = {}
+        results.forEach(line => {
+          let cName = ""
+          for(let char of line['c.name']) {
+            if(char >= 'A' && char <= 'Z')
+              cName += char
+          }
+          
+          let cCode = line['i.code'] + '-' + line['c.code']
+          data[cCode] = { short: cName, name: line['c.name'] }
+        })
+        
+        console.log('getCourses -> ', data)
+        resolve(data)
+      }, error => reject(error))
+    })
+  }
+
   execQuery(cypher: string) {
     console.log('QUERY: ', cypher)
     return this.http.get(environment.apiUrl + 'query/' + cypher)
