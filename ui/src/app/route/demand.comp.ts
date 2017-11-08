@@ -3,40 +3,37 @@ import { QueryService } from '../query.srv'
 
 import * as d3 from 'd3';
 
+/* TODO: ideas for this chart
+  1. Add % on each course option
+*/
+
 @Component({
-  selector: 'route-positions',
-  templateUrl: './positions.comp.html'
+  selector: 'route-demand',
+  templateUrl: './demand.comp.html'
 })
-export class PositionsRoute {
+export class DemandRoute {
   @ViewChild('container') container
   @ViewChild('chart') chart
 
-  //scale configs
+  // scale configs
   padding = { top: 20, right: 20, bottom: 35, left: 25 }
 
-  //scale conventions
-  width: number //= 800
-  height: number //= 500
-
+  // scale conventions
+  width: number
+  height: number
   innerWidth: number
   innerHeight: number
 
-  // Universidade de Aveiro -> 0300
-  //   Engenharia de Computadores e Telemática -> 9361
-  //   Engenharia Eletrónica e Telecomunicações -> 9365
-  //   Engenharia Informática -> 9119
-  //   Engenharia Computacional -> G009
-  //   Tecnologias e Sistemas de Informação -> 9251
-
+  // TODO: these should be from a global filter...
   institutions = ['0300']
   courses = ['9361', '9365', '9119', 'G009' , '9251']
-  
-  yearSelection: number
-  years: number[]
-
   minYear = 2009
   maxYear = 2016
 
+  // selections
+  yearSelection: number
+
+  // data and meta-data loaded from server
   metaDataKeys: string[]
   metaData: {}
   data: any[]
@@ -60,10 +57,7 @@ export class PositionsRoute {
   }
 
   constructor(private qSrv: QueryService) {
-    this.years = []
     this.yearSelection = this.maxYear
-    for (let i = this.minYear; i <= this.maxYear; i++)
-      this.years.push(i)
   }
 
   ngAfterViewInit() {
@@ -102,7 +96,8 @@ export class PositionsRoute {
   getData() {
     let query = `
       MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
-      WHERE i.code IN [${this.institutions.map(_ => "'"+_+"'")}] AND c.code IN [${this.courses.map(_ => "'"+_+"'")}] AND a.year IN [${this.years}]
+      WHERE i.code IN [${this.institutions.map(_ => "'"+_+"'")}] AND c.code IN [${this.courses.map(_ => "'"+_+"'")}]
+        AND a.year IN range(${this.minYear}, ${this.maxYear})
       WITH i.code AS institution, c.code AS course, a.year AS year, { option: a.order, placed: count(DISTINCT s) } AS options_sum
       WITH institution, course, { year: year, options: collect(options_sum) } as years_col
       RETURN institution, course, collect(years_col) as years
@@ -114,10 +109,10 @@ export class PositionsRoute {
         .subscribe((results: any[]) => {
           let data = results.map(line => {
             let years = {}
-            line.years.forEach(yeaLine => {
+            line.years.forEach(yearLine => {
               let year = []
-              years[yeaLine.year] = year
-              yeaLine.options.forEach(li => year[li.option - 1] = li.placed)
+              years[yearLine.year] = year
+              yearLine.options.forEach(li => year[li.option - 1] = li.placed)
             })
 
             let cCode = line.institution + '-' + line.course

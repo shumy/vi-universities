@@ -5,12 +5,14 @@ import { HomeRoute }                   from './route/home.comp';
 import { QueryRoute }                  from './route/query.comp';
 import { ModelRoute }                  from './route/model.comp';
 
-import { PositionsRoute }              from './route/positions.comp';
+import { DemandRoute }                 from './route/demand.comp';
+import { DemandCourseRoute }                 from './route/demand-course.comp';
 
 const appRoutes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   { path: 'home', component: HomeRoute },
-  { path: 'positions', component: PositionsRoute },
+  { path: 'demand', component: DemandRoute },
+  { path: 'demand/demand-course', component: DemandCourseRoute },
 
   { path: 'query', component: QueryRoute },
   { path: 'model', component: ModelRoute },

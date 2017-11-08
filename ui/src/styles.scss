@@ -1,50 +1,11 @@
 @import "~@angular/material/prebuilt-themes/deeppurple-amber.css";
 @import "~material-design-icons/iconfont/material-icons.css";
 
-body {
-  margin: 0px;
-  padding: 0px;
-}
+/* variables */
+$background: #f5f5f5;
+$border-color: #cacaca;
 
-.fixed-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 2;
-  width: 100%  !important;
-}
-
-.content {
-  margin: 70px 5px 0px 5px;
-}
-
-.fill-remaining-space {
-  flex: 1 1 auto;
-}
-
-.full-width {
-  width: 100%;
-}
-
-/*reused in charts */
-.chart-container {
-  flex: 1 1 auto;
-  overflow: hidden;
-  height: calc(100vh - 100px);
-  background-color: #f5f5f5;
-}
-
-.chart-title {
-  margin: 5px 10px 5px 10px;
-}
-
-.item-box {
-  margin: 3px 5px 3px 5px;
-  padding: 3px 5px 3px 5px;
-
-  background-color: #f5f5f5;
-}
-
+/* mixins */
 @mixin tooltip-base {
   position: absolute;
   visibility: hidden;
@@ -59,18 +20,89 @@ body {
   z-index: 10;
 }
 
+@mixin light-border {
+  border-style: solid;
+  border-width: 1px;
+  border-color: $border-color;
+}
+
+/* -------------------------------------------------------------------------------------- */
+body {
+  margin: 0px;
+  padding: 0px;
+}
+
+.fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 100% !important;
+}
+
+.content {
+  margin: 70px 5px 0px 5px;
+}
+
+/* flex helpers */
+.flex-auto {
+  display: flex; height: auto;
+}
+
+.flex-fill {
+  flex: 1 1 auto;
+}
+
+.flex-center {
+  align-self: center;
+}
+
+/* chart styles */
+.chart {
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+  height: calc(100vh - 100px);
+  width: 100%;
+
+  background-color: $background;
+}
+
+.chart-title {
+  margin: 5px 10px 5px 10px;
+}
+
+.chart-tooltip {
+  @include tooltip-base;
+  min-width: 50px;
+}
+
+/* item display */
+.item-box {
+  @include light-border;
+  margin: 3px 5px 3px 5px;
+  padding: 3px 5px 3px 5px;
+
+  background-color: $background;
+}
+
+.item-box-selected {
+  background-color: $border-color;
+}
+
 .tooltip {
   position: relative;
   display: inline-block;
   cursor: pointer;
 
   &:hover {
-    .tooltiptext {
+    .tooltip-text {
       visibility: visible;
     }  
   }
 
-  .tooltiptext {
+  .tooltip-text {
     @include tooltip-base;
     width: 150px;
 
@@ -98,9 +130,4 @@ body {
       margin-left: -60px;
     }
   }
-}
-
-.chart-tooltip {
-  @include tooltip-base;
-  min-width: 50px;
 }

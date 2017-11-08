@@ -8,6 +8,23 @@ export class QueryService {
   
   constructor(private http: HttpClient) {}
 
+  getCourse(institution: string, course: string) {
+    let query = `
+      MATCH (c:Course)-[:of]->(i:Institution)
+      WHERE i.code = '${institution}' AND c.code = '${course}'
+      RETURN i.name as institution, c.name as course
+    `
+
+    return new Promise<{institution: string, course: string}>((resolve, reject) => {
+      this.execQuery(query).subscribe((results: any[]) => {
+        let data = results[0]
+        
+        console.log('getCourse -> ', data)
+        resolve(data)
+      }, error => reject(error))
+    })
+  }
+
   getCourses(institutions: string[], courses: string[]) {
     let query = `
       MATCH (c:Course)-[:of]->(i:Institution)

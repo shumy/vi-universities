@@ -1,0 +1,27 @@
+<div class="flex-auto">
+  <div class="chart">
+    <div class="chart-title">
+      <div style="float: left"><strong>Demand (by Year)</strong>: Number of applications in each course for the selected year.</div>
+      <div style="float: right">Year: <strong>{{yearSelection}}</strong></div>
+    </div>
+    <div #container class="flex-fill">
+      <div class="chart-tooltip"></div>
+      <svg #chart></svg>
+    </div>
+  </div>
+
+  <!--Filters and options-->
+  <div class="flex-auto">
+    <div class="flex-auto" style="flex: 1; flex-direction: column;">
+      <div class="flex-center">Year</div>
+      <mat-slider class="flex-fill" vertical thumbLabel tickInterval="1" [min]="minYear" [max]="maxYear" [value]="yearSelection" (input)="setYearSelection($event.value)"></mat-slider>
+    </div>
+    <div class="flex-auto" style="flex: 1; flex-direction: column;">
+      <div class="flex-center">Course</div>
+      <div *ngFor="let key of metaDataKeys" class="item-box tooltip" routerLink="demand-course" [queryParams]="{course: key}">
+        {{metaData[key].short}}
+        <span class="tooltip-text left">{{metaData[key].name}}</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+<div class="flex-auto">
+  <div class="chart">
+    <div class="chart-title">
+      <div style="float: left"><strong>Demand (by Course)</strong>: Number of applications in each year for the selected course.</div>
+      <strong style="float: right">{{courseName}}</strong>
+    </div>
+    <div #container class="flex-fill">
+      <div class="chart-tooltip"></div>
+      <svg #chart></svg>
+    </div>
+  </div>
+
+  <!--Filters and options-->
+  <div class="flex-auto">
+    <div class="flex-auto" style="flex: 1; flex-direction: column;">
+      <div class="flex-center">Course</div>
+      <div *ngFor="let key of metaDataKeys" class="item-box tooltip" [class.item-box-selected]="selectedCourseCode == key" (click)="setCourseSelection(key)">
+        {{metaData[key].short}}
+        <span class="tooltip-text left">{{metaData[key].name}}</span>
+      </div>
+    </div>
+  </div>
+</div>

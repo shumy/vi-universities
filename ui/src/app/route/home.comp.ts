@@ -6,9 +6,11 @@ import { QueryService } from '../query.srv'
   templateUrl: './home.comp.html'
 })
 export class HomeRoute {
+  ready = false
+
   applicationsByYear =  {
     chartType: 'PieChart',
-    options: { title: 'Applications per Year', pieHole: 0.4, width: 800, height: 600 },
+    options: { title: 'Accepted applications per year.', pieHole: 0.4, width: 800, height: 600 },
     columns: ['Year', 'Applications per Year'],
     dataTable: []
   }
@@ -26,7 +28,8 @@ export class HomeRoute {
       dataStruct.dataTable = [ dataStruct.columns ]
       results.map(lineTransform)
         .forEach(line => dataStruct.dataTable.push(line))
-      this.change.detectChanges()
+      
+      this.ready = true
     })
   }
 }

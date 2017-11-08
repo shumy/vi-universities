@@ -21,14 +21,15 @@ import { HomeRoute }                   from './route/home.comp';
 import { QueryRoute }                  from './route/query.comp';
 import { ModelRoute }                  from './route/model.comp';
 
-import { PositionsRoute }              from './route/positions.comp';
+import { DemandRoute }                 from './route/demand.comp';
+import { DemandCourseRoute }           from './route/demand-course.comp';
 
 @NgModule({
   bootstrap: [AppComponent],
   providers: [QueryService],
   declarations: [
     AppComponent, HomeRoute, QueryRoute, ModelRoute,
-    PositionsRoute
+    DemandRoute, DemandCourseRoute
   ],
   imports: [
     routing,
