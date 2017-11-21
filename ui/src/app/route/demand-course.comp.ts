@@ -28,7 +28,7 @@ export class DemandCourseRoute {
   // TODO: these should be from a global filter...
   institutions = ['0300']
   courses = ['9361', '9365', '9119', 'G009' , '9251']
-  minYear = 2009
+  minYear = 2007
   maxYear = 2016
 
   // selections
@@ -43,7 +43,7 @@ export class DemandCourseRoute {
   data: any[]
 
   //d3 fixed elements
-  color: d3.ScaleLinear<string, string>
+  color: any//d3.ScaleLinear<string, string>
   svg: d3.Selection<any, {}, null, undefined>
 
   //d3 elements dependent on data refresh
@@ -52,6 +52,7 @@ export class DemandCourseRoute {
 
   //d3 elements dependent on resize and data refresh
   lineBars: any
+  placedBars: any
   dataBars: any
 
   setCourseSelection(course: string) {
@@ -103,19 +104,35 @@ export class DemandCourseRoute {
   }
 
   getData() {
-    let query = `
+    /* original
       MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
       WHERE i.code = '${this.selectedInst}' AND c.code = '${this.selectedCourse}'
         AND a.year IN range(${this.minYear}, ${this.maxYear})
       WITH a.year AS year, { order: a.order, placed: count(DISTINCT s) } AS options_sum
       RETURN year, collect(options_sum) as options
       ORDER BY year
+    */
+
+    let query = `
+      MATCH (s:Student)-[r]-(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
+      WHERE i.code = '${this.selectedInst}' AND c.code = '${this.selectedCourse}'
+        AND a.year IN range(${this.minYear}, ${this.maxYear})
+      WITH a.year AS year, { type: type(r), order: a.order, number: count(DISTINCT s) } AS options_sum
+      RETURN year, collect(options_sum) as options
+      ORDER BY year
     `
     return new Promise<any[]>((resolve, reject) => {
       this.qSrv.execQuery(query).subscribe((results: any[]) => {
         let data = results.map(line => {
-          let newLine = { year: line.year, options: []}
-          line.options.forEach(opt => newLine.options[opt.order - 1] = opt.placed)
+          let newLine = { year: line.year, placed: 0, options: []}
+          
+          line.options.forEach(opt => {
+            if (opt.type == 'from')
+              newLine.options[opt.order - 1] = opt.number
+            else
+              newLine.placed += opt.number
+          })
+
           return newLine
         })
 
@@ -123,40 +140,6 @@ export class DemandCourseRoute {
       }, error => reject(error))
     })
   }
-
-  /*getData() {
-    let query = `
-      MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
-      WHERE i.code IN [${this.institutions.map(_ => "'"+_+"'")}] AND c.code IN [${this.courses.map(_ => "'"+_+"'")}] AND a.year IN [${this.years}]
-      WITH i.code AS institution, c.code AS course, a.year AS year, { option: a.order, placed: count(DISTINCT s) } AS options_sum
-      WITH institution, course, { year: year, options: collect(options_sum) } as years_col
-      RETURN institution, course, collect(years_col) as years
-      ORDER BY institution, course
-    `
-
-    return new Promise<any[]>((resolve, reject) => {
-      this.qSrv.execQuery(query)
-        .subscribe((results: any[]) => {
-          let data = results.map(line => {
-            let years = {}
-            line.years.forEach(yeaLine => {
-              let year = []
-              years[yeaLine.year] = year
-              yeaLine.options.forEach(li => year[li.option - 1] = li.placed)
-            })
-
-            let cCode = line.institution + '-' + line.course
-            return {
-              code: cCode,
-              course: this.metaData[cCode].short,
-              years: years
-            }
-          })
-          
-          resolve(data)
-        }, error => reject(error))
-    })
-  }*/
 
   transform(results: any[]) {
     // map the start position
@@ -180,9 +163,11 @@ export class DemandCourseRoute {
     this.scaleX = d3.scaleBand()
     this.scaleY = d3.scaleLinear()
 
-    this.color = d3.scaleLinear<string>()
-      .domain([0, 1, 2, 3, 4, 5])
-      .range([ "#570AB2", "#AB0AB2", "#B20A65", "#B20A11", "#B2570A", "#B2AB0A"])
+    this.color = d3.scaleOrdinal(d3.schemeCategory10)
+    //this.color = d3.scaleLinear<string>()
+    //  .domain([0, 1, 2, 3, 4, 5])
+    //  .range(["#00008B", "#8B0000", "#228B22", "#9400D3", "#1E90FF", "#FFA500"])
+      //.range([ "#570AB2", "#AB0AB2", "#B20A65", "#B20A11", "#B2570A", "#B2AB0A"])
   }
 
   // process d3 elements only related with data
@@ -225,17 +210,30 @@ export class DemandCourseRoute {
       .data(this.data)
         .enter().append("g")
           .attr("class", "bar")
-        
-    this.dataBars = this.lineBars.selectAll(".placed")
+    
+    this.placedBars = this.lineBars.append("rect")
+      .attr("class", "placed")
+      .attr("fill", this.color(0))
+      .attr("y", 0)
+      .on("mousemove", (line) => {
+        d3.select(".chart-tooltip")
+          .style("visibility", "visible")
+          .style("left", d3.event.pageX - 28 + "px")
+          .style("top", d3.event.pageY - 50 + "px")
+          .html(`Placed <br>${line.placed}`)
+      })
+      .on("mouseout", _ => d3.select(".chart-tooltip").style("visibility", "hidden"))
+
+    this.dataBars = this.lineBars.selectAll(".demand")
       .data(line => line.options)
         .enter().append("rect")
-          .attr("class", "placed")
-          .on("mousemove", (placed, index) => {
+          .attr("class", "demand")
+          .on("mousemove", (demand, index) => {
             d3.select(".chart-tooltip")
               .style("visibility", "visible")
               .style("left", d3.event.pageX - 28 + "px")
               .style("top", d3.event.pageY - 50 + "px")
-              .html(`Option ${index + 1}<br>${placed.value}`)
+              .html(`Option ${index + 1}<br>${demand.value}`)
           })
           .on("mouseout", _ => d3.select(".chart-tooltip").style("visibility", "hidden"))
 
@@ -280,10 +278,22 @@ export class DemandCourseRoute {
     this.lineBars
       .attr("transform", (line) => `translate(${this.scaleX(line.year)}, ${this.innerHeight}) scale(1, -1)`)
 
+    let bandMargin = this.scaleX.bandwidth()/10
+    let band = this.scaleX.bandwidth() - 2*bandMargin
+
+    //placed
+    this.placedBars
+      .attr("x", band + 1.5*bandMargin)
+      .attr("width", 4*bandMargin)
+      .attr("height", (line: any) => this.innerHeight - this.scaleY(line.placed))
+      //.attr("fill", this.color(7))
+
+    //demand
     this.dataBars
-      .attr("y", (placed: any) => this.innerHeight - this.scaleY(placed.start))
-      .attr("height", (placed: any) => this.innerHeight - this.scaleY(placed.value))
-      .attr("width", this.scaleX.bandwidth())
+      .attr("x", bandMargin)
+      .attr("width", band)
+      .attr("y", (option: any) => this.innerHeight - this.scaleY(option.start))
+      .attr("height", (option: any) => this.innerHeight - this.scaleY(option.value))
       .attr("fill", (_, i) => this.color(i))
   }
 }

@@ -24,12 +24,15 @@ import { ModelRoute }                  from './route/model.comp';
 import { DemandRoute }                 from './route/demand.comp';
 import { DemandCourseRoute }           from './route/demand-course.comp';
 
+import { GradesRoute }                 from './route/grades.comp';
+
 @NgModule({
   bootstrap: [AppComponent],
   providers: [QueryService],
   declarations: [
     AppComponent, HomeRoute, QueryRoute, ModelRoute,
-    DemandRoute, DemandCourseRoute
+    DemandRoute, DemandCourseRoute,
+    GradesRoute
   ],
   imports: [
     routing,

@@ -3,8 +3,20 @@ import { QueryService } from '../query.srv'
 
 import * as d3 from 'd3';
 
-/* TODO: ideas for this chart
-  1. Add % on each course option
+/*
+  Using resize method:
+    1. Update and redraw: https://blog.webkid.io/responsive-chart-usability-d3/
+    2. Using constant viewBox: https://chartio.com/resources/tutorials/how-to-resize-an-svg-when-the-window-is-resized-in-d3-js/
+  
+    <svg width="700" height="500" viewBox="0 -540 723 540" preserveAspectRatio="xMidYMid meet">
+      <g transform="translate(25, 20) scale(1, -1)">
+      </g>
+    </svg>
+
+    TODO: ideas for this chart
+  1. Add % on each course option.
+  2. Add color legend.
+  3. Selectable options.
 */
 
 @Component({
@@ -27,7 +39,7 @@ export class DemandRoute {
   // TODO: these should be from a global filter...
   institutions = ['0300']
   courses = ['9361', '9365', '9119', 'G009' , '9251']
-  minYear = 2009
+  minYear = 2007
   maxYear = 2016
 
   // selections
@@ -39,7 +51,7 @@ export class DemandRoute {
   data: any[]
 
   //d3 fixed elements
-  color: d3.ScaleLinear<string, string>
+  color: any//d3.ScaleLinear<string, string>
   svg: d3.Selection<any, {}, null, undefined>
 
   //d3 elements dependent on data refresh
@@ -150,9 +162,12 @@ export class DemandRoute {
     this.scaleX = d3.scaleBand()
     this.scaleY = d3.scaleLinear()
 
-    this.color = d3.scaleLinear<string>()
-      .domain([0, 1, 2, 3, 4, 5])
-      .range([ "#570AB2", "#AB0AB2", "#B20A65", "#B20A11", "#B2570A", "#B2AB0A"])
+    this.color = d3.scaleOrdinal(d3.schemeCategory10)
+
+    //this.color = d3.scaleLinear<string>()
+    //  .domain([0, 1, 2, 3, 4, 5])
+    //  .range(["#00008B", "#8B0000", "#228B22", "#9400D3", "#1E90FF", "#FFA500"])
+      //.range([ "#570AB2", "#AB0AB2", "#B20A65", "#B20A11", "#B2570A", "#B2AB0A"])
   }
 
   // process d3 elements only related with data
