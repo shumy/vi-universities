@@ -1,5 +1,6 @@
 import { DomSanitizer } from '@angular/platform-browser';
 import { Component, ViewChild } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { QueryService } from '../query.srv'
 
 import * as d3 from 'd3';
@@ -72,7 +73,7 @@ export class GradesCurveRoute {
     this.draw()
   }
 
-  constructor(private qSrv: QueryService, private sanitizer: DomSanitizer) {
+  constructor(private route: ActivatedRoute, private qSrv: QueryService, private sanitizer: DomSanitizer) {
     this.yearSelection = this.maxYear
   }
 
@@ -91,13 +92,18 @@ export class GradesCurveRoute {
       this.metaDataKeys = Object.keys(md)
       this.metaData = md
 
-      //start will all selected...
-      this.metaDataKeys.forEach(code => this.selectedCourses.push(code))
+      this.route.queryParams.subscribe(params => {
+        console.log('COURSES: ', params.courses)
+        if (params.courses == null)
+          this.metaDataKeys.forEach(code => this.selectedCourses.push(code))
+        else
+          this.selectedCourses = params.courses
 
-      this.getData().then(results => {
-        this.data = results
-        this.refresh()
-        this.draw()
+        this.getData().then(results => {
+          this.data = results
+          this.refresh()
+          this.draw()
+        })
       })
     })
   }

@@ -18,7 +18,7 @@
           <!--<span class="tooltip-text left">{{metaData[key].name}}</span>-->
         </div>
         <span class="flex-fill"></span>
-        <button mat-mini-fab class="flex-center" matTooltip="Show grade curves." matTooltipPosition="left" routerLink="grades-curve">
+        <button mat-mini-fab class="flex-center" matTooltip="Show grade curves." matTooltipPosition="left" routerLink="grades-curve" [queryParams]="{courses: selectedCourses}">
           <mat-icon>timeline</mat-icon>
         </button>
       </div>
