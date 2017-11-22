@@ -18,9 +18,9 @@
     </div>
     <div class="flex-auto" style="flex: 1; flex-direction: column;">
       <div class="flex-center">Course</div>
-      <div *ngFor="let key of metaDataKeys" class="item-box tooltip" routerLink="demand-course" [queryParams]="{course: key}">
+      <div *ngFor="let key of metaDataKeys" class="item-box" [matTooltip]="metaData[key].name" matTooltipPosition="left" routerLink="demand-course" [queryParams]="{course: key}">
         {{metaData[key].short}}
-        <span class="tooltip-text left">{{metaData[key].name}}</span>
+        <!--<span class="tooltip-text left">{{metaData[key].name}}</span>-->
       </div>
     </div>
   </div>

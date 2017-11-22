@@ -83,6 +83,7 @@ body {
   @include light-border;
   margin: 3px 5px 3px 5px;
   padding: 3px 5px 3px 5px;
+  cursor: pointer;
 
   background-color: $background;
 }
@@ -91,7 +92,12 @@ body {
   background-color: $border-color;
 }
 
-.tooltip {
+.mat-tooltip {
+  background-color: black;
+  font-size: 14px;
+}
+
+/*.tooltip {
   position: relative;
   display: inline-block;
   cursor: pointer;
@@ -130,4 +136,4 @@ body {
       margin-left: -60px;
     }
   }
-}
+}*/

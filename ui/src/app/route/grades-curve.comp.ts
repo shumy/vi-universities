@@ -5,10 +5,10 @@ import { QueryService } from '../query.srv'
 import * as d3 from 'd3';
 
 @Component({
-  selector: 'route-grades',
-  templateUrl: './grades.comp.html'
+  selector: 'route-grades-curve',
+  templateUrl: './grades-curve.comp.html'
 })
-export class GradesRoute {
+export class GradesCurveRoute {
   @ViewChild('container') container
   @ViewChild('chart') chart
 
@@ -28,7 +28,9 @@ export class GradesRoute {
   maxYear = 2016
 
   // selections
+  yearSelection: number
   selectedCourses = []
+  dataSelection = []
 
   // data and meta-data loaded from server
   metaDataKeys: string[]
@@ -40,17 +42,11 @@ export class GradesRoute {
   svg: d3.Selection<any, {}, null, undefined>
 
   //d3 elements dependent on data refresh
-  scaleX: d3.ScaleBand<string>
+  scaleX: d3.ScaleLinear<number, number>
   scaleY: d3.ScaleLinear<number, number>
 
   //d3 elements dependent on resize and data refresh
-  yearBars: any
-  dataBars: any
-
-  avgCircles: any
-  maxLines: any
-  minLines: any
-  rangeLines: any
+  coursePaths: any
 
   getCourseColor(code: string) {
     let index = this.selectedCourses.indexOf(code)
@@ -65,12 +61,20 @@ export class GradesRoute {
       this.selectedCourses.splice(index, 1)
     else
       this.selectedCourses.push(code)
-
-    this.clear()
+    
+    this.refresh()
     this.draw()
   }
 
-  constructor(private qSrv: QueryService, private sanitizer: DomSanitizer) {}
+  setYearSelection(yearValue) {
+    this.yearSelection = yearValue
+    this.refresh()
+    this.draw()
+  }
+
+  constructor(private qSrv: QueryService, private sanitizer: DomSanitizer) {
+    this.yearSelection = this.maxYear
+  }
 
   ngAfterViewInit() {
     this.init()
@@ -99,20 +103,31 @@ export class GradesRoute {
   }
 
   getData() {
+    /*
+    MATCH (s:Student)<-[:from]-(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution) 
+    WHERE i.code IN ['0300'] AND c.code IN ['9361', '9365', '9119', 'G009' , '9251']
+      AND a.year IN range(2014, 2017)
+    WITH a.year AS year, i.code AS inst, c.code AS course, a.grade AS grade
+    ORDER BY year, inst, course, grade DESC
+    WITH year, { inst: inst, course: course, grades: collect(grade) } AS grades_per_course
+    RETURN year, collect(grades_per_course) as courses
+    ORDER BY year
+    */
     let query = `
-      MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
+      MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution) 
       WHERE i.code IN [${this.institutions.map(_ => "'"+_+"'")}] AND c.code IN [${this.courses.map(_ => "'"+_+"'")}]
         AND a.year IN range(${this.minYear}, ${this.maxYear})
-      WITH a.year AS year, { inst: i.code, course: c.code, max: max(a.grade), min: min(a.grade), avg: avg(a.grade) } AS grades_per_course
-      ORDER BY grades_per_course.inst, grades_per_course.course
-      RETURN year, collect(grades_per_course) as grades
+      WITH a.year AS year, i.code AS inst, c.code AS course, a.grade AS grade
+      ORDER BY year, inst, course, grade DESC
+      WITH year, { inst: inst, course: course, grades: collect(grade) } AS grades_per_course
+      RETURN year, collect(grades_per_course) as courses
       ORDER BY year
     `
 
     return new Promise<any[]>((resolve, reject) => {
       this.qSrv.execQuery(query)
         .subscribe((results: any[]) => {
-          results.forEach(line => line.grades.forEach(c => {
+          results.forEach(line => line.courses.forEach(c => {
             let cCode = c.inst + '-' + c.course
             c.code = cCode
             c.course = this.metaData[cCode].short
@@ -132,22 +147,23 @@ export class GradesRoute {
 
     this.color = d3.scaleOrdinal(d3.schemeCategory10)
 
-    this.scaleX = d3.scaleBand()
+    this.scaleX = d3.scaleLinear()
     
     this.scaleY = d3.scaleLinear()
-                      .domain([90, 200])
+      .domain([90, 200])
   }
 
   // process d3 elements only related with data
   refresh() {
     console.log('REFRESH')
+    let courses = this.data.filter(_ => _.year == this.yearSelection)[0].courses
+    this.dataSelection = courses.filter(c => this.selectedCourses.indexOf(c.code) > -1)
+    
+    let max = d3.max(this.dataSelection, line => line.grades.length)
 
-    //xAxis labels from results
-    let xAxisKeys = this.data.map(line => line.year)
+    this.scaleX.domain([0, max])
 
-    this.scaleX
-      .domain(xAxisKeys)
-      .padding(0.3)
+    this.clear()
   }
 
   clear() {
@@ -168,55 +184,18 @@ export class GradesRoute {
     this.svg.append("g").attr("class", "x-axis")
     this.svg.append("g").attr("class", "y-axis")
 
-    this.yearBars = this.svg.selectAll(".year")
-      .data(this.data)
-        .enter().append("g")
-          .attr("class", "year")
-        
-    this.dataBars = this.yearBars.selectAll(".grade")
-      .data((line: any) => line.grades.filter(c => this.selectedCourses.indexOf(c.code) > -1))
-        .enter().append("g")
-          .attr("class", "grade")
-
-    this.maxLines = this.dataBars
-      .append("line")
-        .attr("class", "max")
-        .attr("stroke-width", 1)
-        .attr("stroke", c => this.color(c.code))
-
-    this.minLines = this.dataBars
-      .append("line")
-        .attr("class", "min")
-        .attr("stroke-width", 1)
-        .attr("stroke", c => this.color(c.code))
+    this.coursePaths = this.svg.selectAll(".course")
+      .data(this.dataSelection)
+        .enter().append("path")
+          .attr("class", "course")
+          .attr("fill", "none")
+          .attr("stroke-width", 2)
+          .attr("stroke", c => this.color(c.code))
     
-    this.rangeLines = this.dataBars
-      .append("line")
-        .attr("class", "range")
-        .attr("stroke-width", 1)
-        .attr("stroke", c => this.color(c.code))
-    
-    this.avgCircles = this.dataBars
-      .append("circle")
-        .attr("class", "avg")
-        .attr("fill", c => this.color(c.code))
-        .on("mousemove", c => {
-          d3.select(".chart-tooltip")
-            .style("visibility", "visible")
-            .style("left", d3.event.pageX - 28 + "px")
-            .style("top", d3.event.pageY - 50 + "px")
-            .html(`<strong>${c.course}</strong>
-                    <br>Max: ${Math.round(c.max * 10)/10}
-                    <br>Avg: ${Math.round(c.avg * 10)/10}
-                    <br>Min: ${Math.round(c.min * 10)/10}
-                  `)
-        })
-        .on("mouseout", _ => d3.select(".chart-tooltip").style("visibility", "hidden"))
-
     this.redraw()
 
     //will this work ?
-    this.yearBars.exit().remove()
+    this.coursePaths.exit().remove()
   }
 
   // process width/height
@@ -250,37 +229,16 @@ export class GradesRoute {
 
     this.svg.select(".y-axis")
       .call(yAxis)
-
-    this.yearBars
-      .attr("transform", (line) => `translate(${this.scaleX(line.year)}, ${this.innerHeight}) scale(1, -1)`)
-
-    let serieSize = this.scaleX.bandwidth() / this.metaDataKeys.length
-
-    //avg circles
-    this.avgCircles
-      .attr("r", 5)
-      .attr("cy", c => this.innerHeight - this.scaleY(c.avg))
-      .attr("cx", (_, i) => i*serieSize)
     
-    //max line
-    this.maxLines
-      .attr("y1", c => this.innerHeight - this.scaleY(c.max))
-      .attr("x1", (_, i) => i*serieSize - 3)
-      .attr("y2", c => this.innerHeight - this.scaleY(c.max))
-      .attr("x2", (_, i) => i*serieSize + 3)
-
-    //min line
-    this.minLines
-      .attr("y1", c => this.innerHeight - this.scaleY(c.min))
-      .attr("x1", (_, i) => i*serieSize - 3)
-      .attr("y2", c => this.innerHeight - this.scaleY(c.min))
-      .attr("x2", (_, i) => i*serieSize + 3)
-
-    //min to max line (range)
-    this.rangeLines
-      .attr("y1", c => this.innerHeight - this.scaleY(c.min))
-      .attr("x1", (_, i) => i*serieSize)
-      .attr("y2", c => this.innerHeight - this.scaleY(c.max))
-      .attr("x2", (_, i) => i*serieSize)
+    this.coursePaths
+      .attr("d", c => {
+        let path = "M" + (0 + ' ' + this.scaleY(c.grades[0]))
+        for (let i = 1; i < c.grades.length; i++) {
+          let grade = c.grades[i]
+          path += (' L ' + this.scaleX(i) + ' ' + this.scaleY(grade))
+        }
+        
+        return path
+      })
   }
 }

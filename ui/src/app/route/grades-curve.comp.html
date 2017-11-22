@@ -1,7 +1,8 @@
 <div class="flex-auto">
     <div class="chart">
       <div class="chart-title">
-        <div style="float: left"><strong>Max, Min and Avg</strong>: Grades from placed students on the selected courses.</div>
+        <div style="float: left"><strong>Grades Curve</strong>: Ordered grades from all placed students on the selected courses.</div>
+        <div style="float: right">Year: <strong>{{yearSelection}}</strong></div>
       </div>
       <div #container class="flex-fill">
         <div class="chart-tooltip"></div>
@@ -12,15 +13,15 @@
     <!--Filters and options-->
     <div class="flex-auto">
       <div class="flex-auto" style="flex: 1; flex-direction: column;">
+        <div class="flex-center">Year</div>
+        <mat-slider class="flex-fill" vertical thumbLabel tickInterval="1" [min]="minYear" [max]="maxYear" [value]="yearSelection" (input)="setYearSelection($event.value)"></mat-slider>
+      </div>
+      <div class="flex-auto" style="flex: 1; flex-direction: column;">
         <div class="flex-center">Course</div>
         <div *ngFor="let key of metaDataKeys" class="item-box" [matTooltip]="metaData[key].name" matTooltipPosition="left" [style.background-color]="getCourseColor(key)" (click)="setCourseSelection(key)">
           {{metaData[key].short}}
           <!--<span class="tooltip-text left">{{metaData[key].name}}</span>-->
         </div>
-        <span class="flex-fill"></span>
-        <button mat-mini-fab class="flex-center" matTooltip="Show grade curves." matTooltipPosition="left" routerLink="grades-curve">
-          <mat-icon>timeline</mat-icon>
-        </button>
       </div>
     </div>
   </div>

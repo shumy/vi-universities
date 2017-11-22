@@ -8,7 +8,7 @@ import { routing } from './app.routes';
 
 import {
   MatGridListModule, MatToolbarModule,
-  MatTabsModule, MatButtonModule, MatIconModule,
+  MatTabsModule, MatButtonModule, MatIconModule, MatTooltipModule,
   MatInputModule, MatSliderModule
 } from '@angular/material';
 
@@ -25,6 +25,7 @@ import { DemandRoute }                 from './route/demand.comp';
 import { DemandCourseRoute }           from './route/demand-course.comp';
 
 import { GradesRoute }                 from './route/grades.comp';
+import { GradesCurveRoute }            from './route/grades-curve.comp';
 
 @NgModule({
   bootstrap: [AppComponent],
@@ -32,14 +33,14 @@ import { GradesRoute }                 from './route/grades.comp';
   declarations: [
     AppComponent, HomeRoute, QueryRoute, ModelRoute,
     DemandRoute, DemandCourseRoute,
-    GradesRoute
+    GradesRoute, GradesCurveRoute
   ],
   imports: [
     routing,
     Ng2GoogleChartsModule, FormsModule, ReactiveFormsModule,
     HttpClientModule, BrowserModule, BrowserAnimationsModule,
     MatGridListModule, MatToolbarModule,
-    MatTabsModule, MatButtonModule, MatIconModule,
+    MatTabsModule, MatButtonModule, MatIconModule, MatTooltipModule,
     MatInputModule, MatSliderModule
   ]
 })
