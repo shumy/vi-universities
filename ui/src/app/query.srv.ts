@@ -5,8 +5,22 @@ import { environment } from '../environments/environment';
 
 @Injectable()
 export class QueryService {
-  
   constructor(private http: HttpClient) {}
+
+  getTotalYearRange() {
+    let query = `
+      MATCH (a:Application)
+      RETURN min(a.year) as min, max(a.year) as max
+    `
+    return new Promise<{min: number, max: number}>((resolve, reject) => {
+      this.execQuery(query).subscribe((results: any[]) => {
+        let data = results[0]
+        
+        console.log('getTotalYearRange -> ', data)
+        resolve(data)
+      }, error => reject(error))
+    })
+  }
 
   getCourse(institution: string, course: string) {
     let query = `

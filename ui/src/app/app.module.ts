@@ -16,6 +16,7 @@ import { Ng2GoogleChartsModule } from 'ng2-google-charts';
 
 import { AppComponent } from './app.component';
 import { QueryService } from './query.srv';
+import { FilterService } from './filter.srv';
 
 import { HomeRoute }                   from './route/home.comp';
 import { QueryRoute }                  from './route/query.comp';
@@ -29,7 +30,7 @@ import { GradesCurveRoute }            from './route/grades-curve.comp';
 
 @NgModule({
   bootstrap: [AppComponent],
-  providers: [QueryService],
+  providers: [QueryService, FilterService],
   declarations: [
     AppComponent, HomeRoute, QueryRoute, ModelRoute,
     DemandRoute, DemandCourseRoute,

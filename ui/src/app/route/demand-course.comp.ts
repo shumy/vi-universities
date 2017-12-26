@@ -1,6 +1,8 @@
 import { Component, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+
 import { QueryService } from '../query.srv'
+import { FilterService } from '../filter.srv'
 
 import * as d3 from 'd3';
 
@@ -25,11 +27,12 @@ export class DemandCourseRoute {
   innerWidth: number
   innerHeight: number
 
-  // TODO: these should be from a global filter...
+  // these should be from a global filter...
+  minYear: number
+  maxYear: number
+  
   institutions = ['0300']
   courses = ['9361', '9365', '9119', 'G009' , '9251']
-  minYear = 2007
-  maxYear = 2016
 
   // selections
   courseName: string
@@ -69,7 +72,10 @@ export class DemandCourseRoute {
     })
   }
 
-  constructor(private route: ActivatedRoute, private qSrv: QueryService) {}
+  constructor(private route: ActivatedRoute, private qSrv: QueryService, private fSrv: FilterService) {
+    this.minYear = fSrv.minYear
+    this.maxYear = fSrv.maxYear
+  }
 
   ngAfterViewInit() {
     this.init()

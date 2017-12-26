@@ -1,5 +1,6 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component } from '@angular/core';
 import { QueryService } from '../query.srv'
+import { FilterService } from '../filter.srv'
 
 @Component({
   selector: 'route-home',
@@ -8,14 +9,36 @@ import { QueryService } from '../query.srv'
 export class HomeRoute {
   ready = false
 
+  minYear: number
+  maxYear: number
+
   applicationsByYear =  {
     chartType: 'PieChart',
-    options: { title: 'Accepted applications per year.', pieHole: 0.4, width: 800, height: 600 },
+    options: { pieHole: 0.4, width: 800, height: 600, backgroundColor: '#f5f5f5' },
     columns: ['Year', 'Applications per Year'],
     dataTable: []
   }
 
-  constructor(private qSrv: QueryService, private change: ChangeDetectorRef) {
+  setMinYearSelection(value: number) {
+    this.fSrv.minYear = value
+  }
+
+  setMaxYearSelection(value: number) {
+    this.fSrv.maxYear = value
+  }
+
+  constructor(private qSrv: QueryService, private fSrv: FilterService) {
+    this.qSrv.getTotalYearRange().then(range => {
+      this.minYear = range.min
+      this.maxYear = range.max
+
+      if (fSrv.minYear == null)
+        fSrv.minYear = this.minYear
+      
+      if (fSrv.maxYear == null)
+        fSrv.maxYear = this.maxYear
+    })
+
     this.setData(
       this.applicationsByYear,
       "MATCH (s:Student)-[:placed]->(a:Application) RETURN a.year as year, count(s) as total ORDER BY year",

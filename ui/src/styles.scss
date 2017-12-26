@@ -97,6 +97,14 @@ body {
   font-size: 14px;
 }
 
+.g-filters {
+  @include light-border;
+  background-color: $background;
+
+  margin: 4px 0px 4px 0px;
+  padding: 5px 10px 5px 5px;
+}
+
 /*.tooltip {
   position: relative;
   display: inline-block;

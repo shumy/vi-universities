@@ -1,1 +1,30 @@
-<google-chart *ngIf="ready" [data]="applicationsByYear"></google-chart>
+<div class="flex-auto">
+  <div class="chart">
+    <div class="chart-title">
+      <strong style="float: right">{{courseName}}</strong>
+      <div style="float: left"><strong>Placed (by Year)</strong>: Accepted applications per year.</div>
+    </div>
+    <div #container class="flex-fill">
+      <google-chart *ngIf="ready" [data]="applicationsByYear"></google-chart>
+    </div>
+  </div>
+</div>
+
+<div class="g-filters">
+  <div><strong>Global Filters</strong>: These filters are applied to all application charts.</div>
+  
+  <!--Year Range-->
+  <div style="margin: 10px 0px 0px 5px">
+    <strong>Year Range</strong>: [{{fSrv.minYear}}, {{fSrv.maxYear}}]
+  </div>
+  <div class="flex-auto" style="margin-left: 15px">
+    <div class="flex-auto" style="flex: 1;">
+      <div class="flex-center" style="margin-right: 2px;">Min</div>
+      <mat-slider class="flex-fill" thumbLabel tickInterval="1" [min]="minYear" [max]="fSrv.maxYear" [value]="fSrv.minYear" (input)="setMinYearSelection($event.value)"></mat-slider>
+    </div>
+    <div class="flex-auto" style="flex: 1;">
+      <div class="flex-center" style="margin-right: 2px;">Max</div>
+      <mat-slider class="flex-fill" thumbLabel tickInterval="1" [min]="fSrv.minYear" [max]="maxYear" [value]="fSrv.maxYear" (input)="setMaxYearSelection($event.value)"></mat-slider>
+    </div>
+  </div>
+</div>
