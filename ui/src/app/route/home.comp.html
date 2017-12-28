@@ -15,7 +15,7 @@
   
   <!--Year Range-->
   <div style="margin: 10px 0px 0px 5px">
-    <strong>Year Range</strong>: [{{fSrv.minYear}}, {{fSrv.maxYear}}]
+    <strong>Year Range:</strong> [{{fSrv.minYear}}, {{fSrv.maxYear}}]
   </div>
   <div class="flex-auto" style="margin-left: 15px">
     <div class="flex-auto" style="flex: 1;">
@@ -26,5 +26,35 @@
       <div class="flex-center" style="margin-right: 2px;">Max</div>
       <mat-slider class="flex-fill" thumbLabel tickInterval="1" [min]="fSrv.minYear" [max]="maxYear" [value]="fSrv.maxYear" (input)="setMaxYearSelection($event.value)"></mat-slider>
     </div>
+  </div>
+
+  <!--Course Selection-->
+  <div class="flex-auto" style="margin: 0px 0px 0px 5px">
+    <strong style="line-height: 30px;">Course Selection:</strong>
+    <mat-chip-list>
+      <mat-chip *ngFor="let item of fSrv.courses" removable="true" (remove)="remove(item)">
+        {{item.name}}
+        <mat-icon matChipRemove>cancel</mat-icon>
+      </mat-chip>
+    </mat-chip-list>
+  </div>
+  <div class="flex-auto" style="margin-left: 15px">
+    <mat-form-field class="flex-auto" style="flex: 1;">
+      <input type="text" placeholder="Pick Institution" matInput [formControl]="institutionControl" [matAutocomplete]="instAuto">
+      <mat-autocomplete #instAuto="matAutocomplete" (optionSelected)="setSelectedInstitution($event.option.value)" [displayWith]="displayFn">
+        <mat-option *ngFor="let inst of institutionFilteredOptions | async" [value]="inst">
+          {{ inst.name }}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <mat-form-field class="flex-auto" style="flex: 1;">
+      <input type="text" placeholder="Pick Course" matInput [formControl]="courseControl" [matAutocomplete]="courseAuto">
+      <mat-autocomplete #courseAuto="matAutocomplete" (optionSelected)="setSelectedCourse($event.option.value)" [displayWith]="displayFn">
+        <mat-option *ngFor="let course of courseFilteredOptions | async" [value]="course">
+          {{ course.name }}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
   </div>
 </div>

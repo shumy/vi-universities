@@ -9,7 +9,7 @@ import { routing } from './app.routes';
 import {
   MatGridListModule, MatToolbarModule,
   MatTabsModule, MatButtonModule, MatIconModule, MatTooltipModule,
-  MatInputModule, MatSliderModule
+  MatInputModule, MatSliderModule, MatAutocompleteModule, MatChipsModule
 } from '@angular/material';
 
 import { Ng2GoogleChartsModule } from 'ng2-google-charts';
@@ -42,7 +42,7 @@ import { GradesCurveRoute }            from './route/grades-curve.comp';
     HttpClientModule, BrowserModule, BrowserAnimationsModule,
     MatGridListModule, MatToolbarModule,
     MatTabsModule, MatButtonModule, MatIconModule, MatTooltipModule,
-    MatInputModule, MatSliderModule
+    MatInputModule, MatSliderModule, MatAutocompleteModule, MatChipsModule
   ]
 })
 export class AppModule { }

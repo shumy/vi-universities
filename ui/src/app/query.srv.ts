@@ -22,6 +22,38 @@ export class QueryService {
     })
   }
 
+  getInstitutionsList() {
+    let query = `
+      MATCH (i:Institution)
+      RETURN i.code as code, i.name as name
+      ORDER BY name
+    `
+
+    return new Promise<{code: string, name: string}[]>((resolve, reject) => {
+      this.execQuery(query).subscribe((results: any[]) => {
+        console.log('getInstitutionsList -> ', results)
+        let data = results.filter(_ => _.name != 'Código Inexistente!')
+        resolve(data)
+      }, error => reject(error))
+    })
+  }
+
+  getCoursesList(institution: string) {
+    let query = `
+      MATCH (c:Course)-[:of]->(i:Institution)
+      WHERE i.code = '${institution}'
+      RETURN c.code as code, c.name as name
+      ORDER BY name
+    `
+
+    return new Promise<{code: string, name: string}[]>((resolve, reject) => {
+      this.execQuery(query).subscribe((results: any[]) => {
+        console.log('getCoursesList -> ', results)
+        resolve(results)
+      }, error => reject(error))
+    })
+  }
+
   getCourse(institution: string, course: string) {
     let query = `
       MATCH (c:Course)-[:of]->(i:Institution)
