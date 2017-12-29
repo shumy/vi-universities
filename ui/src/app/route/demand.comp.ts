@@ -42,9 +42,6 @@ export class DemandRoute {
   minYear: number
   maxYear: number
 
-  institutions = ['0300']
-  courses = ['9361', '9365', '9119', 'G009' , '9251']
-
   // selections
   yearSelection: number
 
@@ -76,6 +73,9 @@ export class DemandRoute {
     this.maxYear = fSrv.maxYear
     
     this.yearSelection = this.maxYear
+
+    this.metaData = this.fSrv.getCoursesMap()
+    this.metaDataKeys = Object.keys(this.metaData)
   }
 
   ngAfterViewInit() {
@@ -89,14 +89,10 @@ export class DemandRoute {
     }
 
     //get data
-    this.qSrv.getCourses(this.institutions, this.courses).then(md => {
-      this.metaDataKeys = Object.keys(md)
-      this.metaData = md
-      this.getData().then(results => {
-        this.data = this.transform(results)
-        this.refresh()
-        this.draw()
-      })
+    this.getData().then(results => {
+      this.data = this.transform(results)
+      this.refresh()
+      this.draw()
     })
   }
 
@@ -114,7 +110,7 @@ export class DemandRoute {
   getData() {
     let query = `
       MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
-      WHERE i.code IN [${this.institutions.map(_ => "'"+_+"'")}] AND c.code IN [${this.courses.map(_ => "'"+_+"'")}]
+      WHERE (i.code + '-' + c.code) IN [${this.metaDataKeys.map(_ => "'"+_+"'")}]
         AND a.year IN range(${this.minYear}, ${this.maxYear})
       WITH i.code AS institution, c.code AS course, a.year AS year, { option: a.order, placed: count(DISTINCT s) } AS options_sum
       WITH institution, course, { year: year, options: collect(options_sum) } as years_col

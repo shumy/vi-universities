@@ -1,6 +1,6 @@
 import { Component } from '@angular/core'
 import { QueryService } from '../query.srv'
-import { FilterService } from '../filter.srv'
+import { FilterService, CourseFilter } from '../filter.srv'
 
 import {FormControl} from '@angular/forms'
 
@@ -20,8 +20,8 @@ interface Option {
 export class HomeRoute {
   ready = false
 
-  minYear: number
-  maxYear: number
+  minRangeYear: number
+  maxRangeYear: number
 
   institutionControl: FormControl = new FormControl()
   institutionFilteredOptions: Observable<Option[]>
@@ -30,7 +30,6 @@ export class HomeRoute {
   courseFilteredOptions: Observable<Option[]>
 
   selectedInst: Option
-  selectedCourse: Option
 
   applicationsByYear =  {
     chartType: 'PieChart',
@@ -51,9 +50,8 @@ export class HomeRoute {
   }
 
   setSelectedCourse(option: Option) {
-    this.selectedCourse = option
-    console.log('ADD: ', this.selectedInst, this.selectedCourse)
-    this.fSrv.courses.push({ inst: this.selectedInst.code, course: this.selectedCourse.code, name: this.selectedCourse.name })
+    console.log('ADD: ', this.selectedInst, option)
+    this.fSrv.addCourse({ inst: this.selectedInst.code, course: option.code, name: option.name })
   }
 
   setMinYearSelection(value: number) {
@@ -66,14 +64,14 @@ export class HomeRoute {
 
   constructor(private qSrv: QueryService, private fSrv: FilterService) {
     this.qSrv.getTotalYearRange().then(range => {
-      this.minYear = range.min
-      this.maxYear = range.max
+      this.minRangeYear = range.min
+      this.maxRangeYear = range.max
 
       if (fSrv.minYear == null)
-        fSrv.minYear = this.minYear
+        fSrv.minYear = this.minRangeYear
       
       if (fSrv.maxYear == null)
-        fSrv.maxYear = this.maxYear
+        fSrv.maxYear = this.maxRangeYear
     })
 
     this.setData(
@@ -100,12 +98,6 @@ export class HomeRoute {
 
     return list.filter(option =>
       option.name.toLowerCase().indexOf(val.toLowerCase()) === 0)
-  }
-
-  remove(item: { inst: string, course: string, name: string}) {
-    let index = this.fSrv.courses.indexOf(item)
-    if (index > -1)
-      this.fSrv.courses.splice(index, 1)
   }
 
   setData(dataStruct: any, cypher: string, lineTransform: (line: any)=>string[]) {

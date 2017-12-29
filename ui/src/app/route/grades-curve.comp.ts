@@ -28,8 +28,8 @@ export class GradesCurveRoute {
   minYear: number
   maxYear: number
 
-  institutions = ['0300']
-  courses = ['9361', '9365', '9119', 'G009' , '9251']
+  //institutions = ['0300']
+  //courses = ['9361', '9365', '9119', 'G009' , '9251']
 
   // selections
   yearSelection: number
@@ -81,6 +81,9 @@ export class GradesCurveRoute {
     this.maxYear = fSrv.maxYear
     
     this.yearSelection = this.maxYear
+
+    this.metaData = this.fSrv.getCoursesMap()
+    this.metaDataKeys = Object.keys(this.metaData)
   }
 
   ngAfterViewInit() {
@@ -94,40 +97,25 @@ export class GradesCurveRoute {
     }
 
     //get data
-    this.qSrv.getCourses(this.institutions, this.courses).then(md => {
-      this.metaDataKeys = Object.keys(md)
-      this.metaData = md
+    this.route.queryParams.subscribe(params => {
+      console.log('COURSES: ', params.courses)
+      if (params.courses == null)
+        this.metaDataKeys.forEach(code => this.selectedCourses.push(code))
+      else
+        this.selectedCourses = params.courses
 
-      this.route.queryParams.subscribe(params => {
-        console.log('COURSES: ', params.courses)
-        if (params.courses == null)
-          this.metaDataKeys.forEach(code => this.selectedCourses.push(code))
-        else
-          this.selectedCourses = params.courses
-
-        this.getData().then(results => {
-          this.data = results
-          this.refresh()
-          this.draw()
-        })
+      this.getData().then(results => {
+        this.data = results
+        this.refresh()
+        this.draw()
       })
     })
   }
 
   getData() {
-    /*
-    MATCH (s:Student)<-[:from]-(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution) 
-    WHERE i.code IN ['0300'] AND c.code IN ['9361', '9365', '9119', 'G009' , '9251']
-      AND a.year IN range(2014, 2017)
-    WITH a.year AS year, i.code AS inst, c.code AS course, a.grade AS grade
-    ORDER BY year, inst, course, grade DESC
-    WITH year, { inst: inst, course: course, grades: collect(grade) } AS grades_per_course
-    RETURN year, collect(grades_per_course) as courses
-    ORDER BY year
-    */
     let query = `
       MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution) 
-      WHERE i.code IN [${this.institutions.map(_ => "'"+_+"'")}] AND c.code IN [${this.courses.map(_ => "'"+_+"'")}]
+      WHERE (i.code + '-' + c.code) IN [${this.metaDataKeys.map(_ => "'"+_+"'")}]
         AND a.year IN range(${this.minYear}, ${this.maxYear})
       WITH a.year AS year, i.code AS inst, c.code AS course, a.grade AS grade
       ORDER BY year, inst, course, grade DESC

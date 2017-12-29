@@ -27,9 +27,6 @@ export class GradesRoute {
   minYear: number
   maxYear: number
 
-  institutions = ['0300']
-  courses = ['9361', '9365', '9119', 'G009' , '9251']
-
   // selections
   selectedCourses = []
 
@@ -76,6 +73,9 @@ export class GradesRoute {
   constructor(private qSrv: QueryService, private fSrv: FilterService, private sanitizer: DomSanitizer) {
     this.minYear = fSrv.minYear
     this.maxYear = fSrv.maxYear
+
+    this.metaData = this.fSrv.getCoursesMap()
+    this.metaDataKeys = Object.keys(this.metaData)
   }
 
   ngAfterViewInit() {
@@ -88,26 +88,21 @@ export class GradesRoute {
       this.redraw()
     }
 
-    //get data
-    this.qSrv.getCourses(this.institutions, this.courses).then(md => {
-      this.metaDataKeys = Object.keys(md)
-      this.metaData = md
+    //start will all selected...
+    this.metaDataKeys.forEach(code => this.selectedCourses.push(code))
 
-      //start will all selected...
-      this.metaDataKeys.forEach(code => this.selectedCourses.push(code))
-
-      this.getData().then(results => {
-        this.data = results
-        this.refresh()
-        this.draw()
-      })
+    this.getData().then(results => {
+      this.data = results
+      this.refresh()
+      this.draw()
     })
+  
   }
 
   getData() {
     let query = `
       MATCH (s:Student)-[:placed]->(a:Application)-[:on]->(c:Course)-[:of]->(i:Institution)
-      WHERE i.code IN [${this.institutions.map(_ => "'"+_+"'")}] AND c.code IN [${this.courses.map(_ => "'"+_+"'")}]
+      WHERE (i.code + '-' + c.code) IN [${this.metaDataKeys.map(_ => "'"+_+"'")}]
         AND a.year IN range(${this.minYear}, ${this.maxYear})
       WITH a.year AS year, { inst: i.code, course: c.code, max: max(a.grade), min: min(a.grade), avg: avg(a.grade) } AS grades_per_course
       ORDER BY grades_per_course.inst, grades_per_course.course

@@ -70,7 +70,7 @@ export class QueryService {
       }, error => reject(error))
     })
   }
-
+  
   getCourses(institutions: string[], courses: string[]) {
     let query = `
       MATCH (c:Course)-[:of]->(i:Institution)
