@@ -101,6 +101,7 @@ export class QueryService {
   execQuery(cypher: string) {
     console.log('QUERY: ', cypher)
     return this.http.get(environment.apiUrl + 'query/' + cypher)
+      .map(_ => { console.log('RESULT:', _); return _})
   }
 
 }

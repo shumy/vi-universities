@@ -24,7 +24,9 @@ sourceSets {
 
 dependencies {
   compile 'ch.qos.logback:logback-classic:1.1.8'
-  compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.12.0'
+  compile 'org.eclipse.xtend:org.eclipse.xtend.lib:2.12.0' {
+    exclude group: 'org.eclipse.xtend', module 'org.eclipse.xtend.lib.macro'
+  }
   
   compile 'info.picocli:picocli:1.0.1'
   compile 'com.google.code.gson:gson:2.8.2'
